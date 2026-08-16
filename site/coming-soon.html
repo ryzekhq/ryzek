@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ryzek — coming soon</title>
+<meta name="description" content="Static security scanning for AI agent skills. Know what a skill does before your agent runs it. Launching soon." />
+<meta property="og:title" content="ryzek" />
+<meta property="og:description" content="Know what a skill does before your agent runs it. Launching soon." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#080B0C;
+    --panel:#0F1416;
+    --border:#1C2528;
+    --border-hi:#2A363A;
+    --text:#E8EFF1;
+    --dim:#7E8F95;
+    --acid:#7FE05C;
+    --acid-dim:#4A8536;
+    --red:#E05C4F;
+    --amber:#E0A73E;
+    --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+    --sans:'IBM Plex Sans',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;min-height:100vh;background:var(--bg);color:var(--text);
+    font-family:var(--sans);line-height:1.6;
+    display:flex;flex-direction:column;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* subtle scanline texture — reads as "terminal", stays quiet */
+  body::before{
+    content:'';position:fixed;inset:0;pointer-events:none;z-index:1;
+    background:repeating-linear-gradient(
+      to bottom,
+      transparent 0 3px,
+      rgba(127,224,92,.012) 3px 4px
+    );
+  }
+
+  .wrap{width:100%;max-width:660px;margin:0 auto;padding:0 26px;position:relative;z-index:2;}
+
+  header{padding:38px 0;}
+  .logo{
+    font-family:var(--mono);font-weight:600;font-size:15px;
+    letter-spacing:-.02em;display:flex;align-items:center;gap:10px;
+  }
+  .logo .cursor{
+    width:8px;height:15px;background:var(--acid);display:inline-block;
+    animation:blink 1.2s steps(2,start) infinite;
+  }
+  @keyframes blink{to{visibility:hidden;}}
+
+  main{flex:1;display:flex;align-items:center;padding:24px 0 60px;}
+
+  .status{
+    display:inline-flex;align-items:center;gap:9px;
+    font-family:var(--mono);font-size:11.5px;color:var(--acid);
+    letter-spacing:.12em;text-transform:uppercase;
+    border:1px solid var(--acid-dim);padding:5px 12px;margin-bottom:26px;
+  }
+  .pulse{
+    width:6px;height:6px;border-radius:50%;background:var(--acid);
+    animation:pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+  h1{
+    font-size:clamp(30px,6vw,44px);line-height:1.1;margin:0 0 20px;
+    font-weight:700;letter-spacing:-.03em;
+  }
+  h1 .em{color:var(--acid);}
+
+  .lede{font-size:16.5px;color:var(--dim);margin:0 0 34px;max-width:52ch;}
+  .lede strong{color:var(--text);font-weight:500;}
+
+  /* the hook: a tiny terminal showing the thing nobody else catches */
+  .demo{
+    background:#050708;border:1px solid var(--border-hi);
+    font-family:var(--mono);font-size:12px;line-height:1.7;
+    margin-bottom:34px;overflow-x:auto;
+  }
+  .demo-bar{
+    display:flex;align-items:center;gap:7px;padding:9px 13px;
+    border-bottom:1px solid var(--border);background:var(--panel);
+  }
+  .dot{width:10px;height:10px;border-radius:50%;background:var(--border-hi);}
+  .demo-title{
+    margin-left:6px;font-size:10.5px;color:var(--dim);letter-spacing:.06em;
+  }
+  .demo-body{padding:16px;white-space:pre;}
+  .c-dim{color:var(--dim);}
+  .c-acid{color:var(--acid);}
+  .c-red{color:var(--red);}
+  .c-amber{color:var(--amber);}
+
+  .signup{border-top:1px solid var(--border);padding-top:30px;}
+  .signup-label{
+    font-family:var(--mono);font-size:11px;color:var(--dim);
+    letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px;
+  }
+  form{display:flex;gap:10px;flex-wrap:wrap;}
+  input[type=email]{
+    flex:1;min-width:220px;background:var(--panel);
+    border:1px solid var(--border-hi);color:var(--text);
+    font-family:var(--sans);font-size:14.5px;padding:12px 15px;
+  }
+  input[type=email]::placeholder{color:#5C6B70;}
+  input[type=email]:focus{outline:1.5px solid var(--acid-dim);outline-offset:-1px;}
+  button{
+    background:var(--acid);color:#06210A;border:none;
+    font-family:var(--sans);font-weight:600;font-size:14px;
+    padding:12px 24px;cursor:pointer;
+  }
+  button:hover{background:#95E877;}
+  button:disabled{opacity:.5;cursor:default;}
+  .form-note{font-size:12.5px;color:var(--dim);margin-top:12px;}
+  .form-msg{font-size:13.5px;margin-top:12px;color:var(--acid);display:none;}
+
+  .teaser-list{
+    list-style:none;padding:0;margin:34px 0 0;
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;
+    background:var(--border);border:1px solid var(--border);
+  }
+  .teaser-list li{background:var(--bg);padding:18px 18px;}
+  .teaser-list .k{
+    font-family:var(--mono);font-size:10.5px;color:var(--acid);
+    letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;
+  }
+  .teaser-list .v{font-size:13.5px;color:var(--dim);}
+
+  footer{
+    padding:26px 0 34px;border-top:1px solid var(--border);
+    font-size:12.5px;color:var(--dim);
+  }
+  .foot-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+
+  @media(prefers-reduced-motion:reduce){
+    .cursor,.pulse{animation:none;}
+    body::before{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="logo">ryzek<span class="cursor"></span></div>
+  </div>
+</header>
+
+<main>
+  <div class="wrap">
+    <div class="status"><span class="pulse"></span>Launching soon</div>
+
+    <h1>Your agent trusts every skill you install.<br><span class="em">Should it?</span></h1>
+
+    <p class="lede">
+      A skill passes review on Monday. On Thursday its permissions quietly change —
+      and your agent keeps trusting the approval it got on Monday.
+      <strong>ryzek catches that.</strong>
+    </p>
+
+    <div class="demo">
+      <div class="demo-bar">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="demo-title">ryzek ./skills</span>
+      </div>
+<div class="demo-body"><span class="c-dim"># Monday — reviewed, approved, baseline recorded</span>
+<span class="c-acid">Scanned 1 skill(s): 1 clean, 0 flagged.</span>
+
+<span class="c-dim"># Thursday — vendor pushes an update. Nobody re-reviews it.</span>
+
+<span class="c-red">‼️</span> get_weather — overall: <span class="c-red">CRITICAL</span>
+   [<span class="c-red">CRITICAL</span>] manifest-drift (confidence: <span class="c-red">90%</span>)
+     evidence: permissions added: filesystem:read, network:*
+     <span class="c-dim">why: direct hash comparison against the version last
+     scanned. Not a heuristic — a verified diff.</span></div>
+    </div>
+
+    <div class="signup">
+      <div class="signup-label">Get notified at launch</div>
+      <form id="notifyForm">
+        <input type="email" id="email" placeholder="you@company.com" required aria-label="Email address" />
+        <button type="submit" id="submitBtn">Notify me</button>
+      </form>
+      <p class="form-note">Launch notification only. No newsletter, no sequence, unsubscribe in one click.</p>
+      <p class="form-msg" id="formMsg">Thanks — you're on the list.</p>
+    </div>
+
+    <ul class="teaser-list">
+      <li>
+        <div class="k">Confidence scored</div>
+        <div class="v">Every finding tells you how much to trust it, and why.</div>
+      </li>
+      <li>
+        <div class="k">Published rate</div>
+        <div class="v">Measured against a public malicious-skill corpus. Misses included.</div>
+      </li>
+      <li>
+        <div class="k">CI native</div>
+        <div class="v">Seconds, not minutes. No dashboard login required.</div>
+      </li>
+    </ul>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot-row">
+    <span>ryzek — static security scanning for AI agent skills. <a href="mailto:hello@ryzek.dev" style="color:inherit;">hello@ryzek.dev</a></span>
+    <span id="year"></span>
+  </div>
+</footer>
+
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear();
+
+  // NOTE: wire this to a real backend before launch — Formspree, Buttondown,
+  // ConvertKit, or your own endpoint. Right now it only validates and shows
+  // the confirmation; it does NOT store the address anywhere.
+  document.getElementById('notifyForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = document.getElementById('email').value.trim();
+    if (!email || email.indexOf('@') === -1) return;
+
+    document.getElementById('submitBtn').disabled = true;
+    document.getElementById('submitBtn').textContent = 'Added';
+    document.getElementById('formMsg').style.display = 'block';
+    document.getElementById('email').disabled = true;
+  });
+</script>
+
+</body>
+</html>

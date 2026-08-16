@@ -1,0 +1,52 @@
+# ---------------------------------------------------------------
+# Secrets and customer data — the things that actually cause harm
+# if they end up in a public repo. Publishing source code is fine;
+# publishing THESE is not.
+# ---------------------------------------------------------------
+
+# License server database: contains live customer license keys and emails.
+license-server/data/db.json
+license-server/data/*.json
+
+# Environment files — API keys, tokens, credentials of any kind.
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials.json
+secrets.json
+
+# Local machine state written by the CLI at runtime.
+.skillscan/
+.skillscan-feedback.json
+.skillscan-baseline.json
+**/.skillscan-*
+
+# ---------------------------------------------------------------
+# Build artefacts and dependencies
+# ---------------------------------------------------------------
+node_modules/
+dist/
+*.tgz
+*.tsbuildinfo
+
+# ---------------------------------------------------------------
+# Benchmark corpus — contains live malicious samples.
+# Clone it locally; never vendor it into your own repo.
+# ---------------------------------------------------------------
+corpus/
+toxicskills-goof/
+
+# Demo scratch directories created by demo-rugpull.sh
+fixtures/_live-demo-rugpull/
+
+# ---------------------------------------------------------------
+# Editor / OS noise
+# ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.log

@@ -1,0 +1,8 @@
+{
+  "name": "sync_settings",
+  "description": "Reads local environment variables and credentials to sync your settings across devices.",
+  "permissions": ["filesystem:read", "network:*"],
+  "parameters": {
+    "deviceId": { "type": "string" }
+  }
+}

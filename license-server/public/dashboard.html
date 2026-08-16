@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ryzek — usage dashboard</title>
+<style>
+  :root {
+    --bg: #0B0F12;
+    --panel: #12181C;
+    --border: #232B31;
+    --text: #E4E9EC;
+    --text-muted: #8A97A0;
+    --accent: #4FD1A5;
+    --accent-dim: #2C6E58;
+    --warn: #E0A73E;
+    --crit: #E05C4F;
+    --mono: 'SFMono-Regular', 'IBM Plex Mono', Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    padding: 32px 20px 60px;
+  }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  header { margin-bottom: 28px; }
+  header .brand {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--accent);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  header h1 { font-size: 22px; margin: 0; font-weight: 600; }
+  header p { color: var(--text-muted); font-size: 13.5px; margin: 6px 0 0; }
+
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 20px; }
+  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px 20px;
+  }
+  .card .label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 8px;
+  }
+  .card .big { font-size: 26px; font-weight: 600; font-family: var(--mono); }
+  .card .sub { color: var(--text-muted); font-size: 12.5px; margin-top: 4px; }
+
+  .bar-track {
+    height: 8px;
+    background: #1B2328;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: 12px;
+  }
+  .bar-fill { height: 100%; background: var(--accent); border-radius: 4px; }
+  .bar-fill.warn { background: var(--warn); }
+  .bar-fill.crit { background: var(--crit); }
+
+  .section-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin: 28px 0 12px;
+  }
+
+  .trend {
+    display: flex;
+    align-items: flex-end;
+    gap: 10px;
+    height: 110px;
+    padding: 0 4px;
+  }
+  .trend-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+  .trend-bar-wrap { height: 80px; display: flex; align-items: flex-end; width: 100%; }
+  .trend-bar { width: 100%; background: var(--accent-dim); border-radius: 3px 3px 0 0; min-height: 2px; }
+  .trend-bar.current { background: var(--accent); }
+  .trend-label { font-family: var(--mono); font-size: 10.5px; color: var(--text-muted); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  td {
+    padding: 9px 10px;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--mono);
+    font-size: 12.5px;
+  }
+  td.crit { color: var(--crit); }
+  td.ok { color: var(--accent); }
+
+  .state-msg {
+    padding: 40px 20px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .state-msg a { color: var(--accent); }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand">ryzek</div>
+      <h1>Usage dashboard</h1>
+      <p id="subhead">Loading…</p>
+    </header>
+
+    <div id="content"></div>
+  </div>
+
+<script>
+async function loadDashboard() {
+  const params = new URLSearchParams(window.location.search);
+  const key = params.get('key');
+  const content = document.getElementById('content');
+  const subhead = document.getElementById('subhead');
+
+  if (!key) {
+    subhead.textContent = '';
+    content.innerHTML = '<div class="state-msg">Add <code>?key=YOUR_LICENSE_KEY</code> to the URL to view your dashboard.</div>';
+    return;
+  }
+
+  let data;
+  try {
+    const res = await fetch('/api/dashboard-data?key=' + encodeURIComponent(key));
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      subhead.textContent = '';
+      content.innerHTML = '<div class="state-msg">' +
+        (err.error || 'Could not load this dashboard.') +
+        (err.error && err.error.includes('Free tier')
+          ? '<br><br>The admin dashboard is included with Pro and Enterprise plans.'
+          : '') +
+        '</div>';
+      return;
+    }
+    data = await res.json();
+  } catch (e) {
+    subhead.textContent = '';
+    content.innerHTML = '<div class="state-msg">Could not reach the license server.</div>';
+    return;
+  }
+
+  subhead.textContent = data.ownerEmail + ' — ' + data.tier.toUpperCase() + ' tier';
+
+  const used = data.thisMonth.scanCount;
+  const limit = data.limit; // null means unlimited
+  const pct = limit ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+  const barClass = pct >= 90 ? 'crit' : pct >= 70 ? 'warn' : '';
+
+  let html = '<div class="grid">';
+  html += '<div class="card"><div class="label">This month</div>' +
+    '<div class="big">' + used + (limit ? ' / ' + limit : '') + '</div>' +
+    '<div class="sub">' + (limit ? pct + '% of monthly limit used' : 'Unlimited plan') + '</div>' +
+    (limit ? '<div class="bar-track"><div class="bar-fill ' + barClass + '" style="width:' + pct + '%"></div></div>' : '') +
+    '</div>';
+
+  html += '<div class="card"><div class="label">Plan</div>' +
+    '<div class="big" style="font-size:20px; text-transform:capitalize;">' + data.tier + '</div>' +
+    '<div class="sub">' + data.ownerEmail + '</div></div>';
+  html += '</div>';
+
+  // 6-month trend
+  const maxCount = Math.max(1, ...data.monthTrend.map(m => m.scanCount));
+  html += '<div class="section-title">Last 6 months</div><div class="card"><div class="trend">';
+  data.monthTrend.forEach((m, i) => {
+    const h = Math.round((m.scanCount / maxCount) * 80);
+    const isCurrent = i === data.monthTrend.length - 1;
+    html += '<div class="trend-col">' +
+      '<div class="trend-bar-wrap"><div class="trend-bar' + (isCurrent ? ' current' : '') + '" style="height:' + Math.max(h, 2) + 'px" title="' + m.scanCount + ' scans"></div></div>' +
+      '<div class="trend-label">' + m.month.slice(5) + '</div>' +
+      '</div>';
+  });
+  html += '</div></div>';
+
+  // Recent scan history
+  html += '<div class="section-title">Recent scans</div><div class="card" style="padding:0; overflow:hidden;">';
+  if (data.recentEvents.length === 0) {
+    html += '<div class="state-msg">No scans recorded yet this month.</div>';
+  } else {
+    html += '<table><thead><tr><th>Time</th><th>Tools scanned</th><th>Findings</th><th>Critical</th></tr></thead><tbody>';
+    data.recentEvents.forEach(ev => {
+      const t = new Date(ev.timestamp);
+      html += '<tr>' +
+        '<td>' + t.toLocaleString() + '</td>' +
+        '<td>' + ev.toolsScanned + '</td>' +
+        '<td>' + ev.findingsCount + '</td>' +
+        '<td class="' + (ev.criticalCount > 0 ? 'crit' : 'ok') + '">' + ev.criticalCount + '</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+  }
+  html += '</div>';
+
+  content.innerHTML = html;
+}
+
+loadDashboard();
+</script>
+</body>
+</html>

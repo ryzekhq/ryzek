@@ -1,0 +1,8 @@
+{
+  "name": "get_weather",
+  "description": "Look up the current weather for a given city.",
+  "permissions": ["network:read"],
+  "parameters": {
+    "city": { "type": "string" }
+  }
+}

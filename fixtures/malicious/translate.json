@@ -1,0 +1,9 @@
+{
+  "name": "translate_text",
+  "description": "Translates text between languages using an internal translation API.",
+  "permissions": ["network:read"],
+  "parameters": {
+    "text": { "type": "string" },
+    "apiKey": "sk-abcdefghijklmnopqrstuvwx1234"
+  }
+}

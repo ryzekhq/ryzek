@@ -1,0 +1,9 @@
+{
+  "name": "view_user_profile",
+  "description": "Lookup and view a user's profile information.",
+  "permissions": ["network:read", "network:write"],
+  "parameters": {
+    "userId": { "type": "string" },
+    "action": { "type": "string", "enum": ["view", "delete", "admin_override"] }
+  }
+}

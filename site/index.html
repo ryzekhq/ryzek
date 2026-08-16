@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ryzek — static security scanning for AI agent skills</title>
+<meta name="description" content="Static security scanner for AI agent skills and tool manifests. Confidence-scored findings, rug-pull detection, published detection rate. Runs in CI in seconds." />
+<meta property="og:title" content="ryzek" />
+<meta property="og:description" content="Static security scanning for AI agent skills. Every finding comes with a confidence score and a stated reason." />
+<meta property="og:type" content="website" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0E0F;
+    --bg-raised:#111719;
+    --border:#1F2A2D;
+    --border-bright:#2C3A3E;
+    --text:#E6EDEF;
+    --text-dim:#8B9BA0;
+    --acid:#7FE05C;
+    --acid-dim:#4A8536;
+    --amber:#E0A73E;
+    --red:#E05C4F;
+    --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+    --sans:'IBM Plex Sans',system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;background:var(--bg);color:var(--text);
+    font-family:var(--sans);line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:0 24px;}
+
+  /* ---- nav ---- */
+  nav{
+    border-bottom:1px solid var(--border);
+    position:sticky;top:0;background:rgba(10,14,15,.9);
+    backdrop-filter:blur(8px);z-index:10;
+  }
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:58px;}
+  .logo{font-family:var(--mono);font-weight:600;font-size:15px;letter-spacing:-.02em;}
+  .logo .pct{color:var(--acid);}
+  .nav-links{display:flex;gap:22px;align-items:center;}
+  .nav-links a{color:var(--text-dim);text-decoration:none;font-size:13.5px;}
+  .nav-links a:hover{color:var(--text);}
+  .btn-ghost{
+    border:1px solid var(--border-bright);padding:6px 14px;
+    color:var(--text)!important;font-family:var(--mono);font-size:12.5px;
+  }
+  .btn-ghost:hover{border-color:var(--acid);color:var(--acid)!important;}
+
+  /* ---- hero ---- */
+  header{padding:84px 0 64px;border-bottom:1px solid var(--border);}
+  .eyebrow{
+    font-family:var(--mono);font-size:12px;color:var(--acid);
+    letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px;
+  }
+  h1{
+    font-size:clamp(34px,5.5vw,52px);line-height:1.08;margin:0 0 20px;
+    font-weight:700;letter-spacing:-.03em;max-width:16ch;
+  }
+  .lede{font-size:18px;color:var(--text-dim);max-width:60ch;margin:0 0 32px;}
+  .lede strong{color:var(--text);font-weight:500;}
+
+  .cmd{
+    display:flex;align-items:center;gap:12px;background:var(--bg-raised);
+    border:1px solid var(--border-bright);padding:14px 18px;
+    font-family:var(--mono);font-size:14.5px;max-width:420px;margin-bottom:14px;
+  }
+  .cmd .prompt{color:var(--acid-dim);}
+  .cmd code{color:var(--text);}
+  .sub-note{font-size:13px;color:var(--text-dim);font-family:var(--mono);}
+
+  /* ---- stat band ---- */
+  .stats{
+    display:grid;grid-template-columns:repeat(3,1fr);
+    border-bottom:1px solid var(--border);
+  }
+  .stat{padding:30px 24px;border-right:1px solid var(--border);}
+  .stat:last-child{border-right:none;}
+  .stat .num{font-family:var(--mono);font-size:30px;font-weight:600;color:var(--acid);line-height:1;}
+  .stat .num.neutral{color:var(--text);}
+  .stat .lbl{font-size:12.5px;color:var(--text-dim);margin-top:8px;}
+
+  /* ---- sections ---- */
+  section{padding:66px 0;border-bottom:1px solid var(--border);}
+  h2{font-size:26px;margin:0 0 12px;letter-spacing:-.02em;font-weight:600;}
+  .section-lede{color:var(--text-dim);max-width:64ch;margin:0 0 34px;}
+
+  /* ---- terminal ---- */
+  .term{
+    background:#070A0B;border:1px solid var(--border-bright);
+    font-family:var(--mono);font-size:12.5px;line-height:1.75;
+    overflow-x:auto;
+  }
+  .term-bar{
+    display:flex;gap:7px;padding:11px 14px;border-bottom:1px solid var(--border);
+    background:var(--bg-raised);
+  }
+  .dot{width:11px;height:11px;border-radius:50%;background:var(--border-bright);}
+  .term-body{padding:18px;white-space:pre;}
+  .c-dim{color:var(--text-dim);}
+  .c-acid{color:var(--acid);}
+  .c-amber{color:var(--amber);}
+  .c-red{color:var(--red);}
+
+  /* ---- feature grid ---- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);}
+  .cell{background:var(--bg);padding:26px 24px;}
+  .cell h3{font-size:15.5px;margin:0 0 9px;font-weight:600;display:flex;align-items:center;gap:9px;}
+  .cell h3 .idx{font-family:var(--mono);font-size:11.5px;color:var(--acid);}
+  .cell p{margin:0;font-size:14px;color:var(--text-dim);}
+
+  /* ---- callout ---- */
+  .callout{
+    border-left:2px solid var(--amber);background:var(--bg-raised);
+    padding:22px 26px;margin:30px 0 0;
+  }
+  .callout h3{margin:0 0 9px;font-size:15px;color:var(--amber);font-family:var(--mono);font-weight:500;}
+  .callout p{margin:0 0 10px;font-size:14px;color:var(--text-dim);}
+  .callout p:last-child{margin-bottom:0;}
+  .callout strong{color:var(--text);font-weight:500;}
+
+  /* ---- table ---- */
+  table{width:100%;border-collapse:collapse;font-size:13.5px;}
+  th{
+    text-align:left;font-family:var(--mono);font-size:11px;color:var(--text-dim);
+    text-transform:uppercase;letter-spacing:.07em;padding:11px 14px;
+    border-bottom:1px solid var(--border-bright);font-weight:500;
+  }
+  td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
+  td.rule{font-family:var(--mono);font-size:12.5px;color:var(--acid);white-space:nowrap;}
+  td.ast{font-family:var(--mono);font-size:11.5px;color:var(--text-dim);white-space:nowrap;}
+
+  /* ---- tiers ---- */
+  .tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;}
+  .tier{border:1px solid var(--border-bright);padding:26px 22px;}
+  .tier.mid{border-color:var(--acid-dim);}
+  .tier .name{font-family:var(--mono);font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;}
+  .tier .qty{font-size:27px;font-weight:600;margin:12px 0 4px;font-family:var(--mono);}
+  .tier .per{font-size:12.5px;color:var(--text-dim);margin-bottom:16px;}
+  .tier ul{list-style:none;padding:0;margin:0;font-size:13.5px;color:var(--text-dim);}
+  .tier li{padding:5px 0;}
+  .tier li::before{content:'—';color:var(--acid-dim);margin-right:8px;}
+
+  footer{padding:44px 0 60px;color:var(--text-dim);font-size:13px;}
+  footer a{color:var(--text-dim);}
+  .foot-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;}
+
+  @media(max-width:640px){
+    .stats{grid-template-columns:1fr;}
+    .stat{border-right:none;border-bottom:1px solid var(--border);}
+    .nav-links a:not(.btn-ghost){display:none;}
+    header{padding:56px 0 44px;}
+  }
+  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;}}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <span class="logo">skill<span class="pct">-</span>scan</span>
+    <div class="nav-links">
+      <a href="#detects">Detection</a>
+      <a href="#benchmark">Benchmark</a>
+      <a href="#limits">Limitations</a>
+      <a href="https://github.com/ryzekhq/ryzek" class="btn-ghost">GitHub</a>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Static analysis for agent skills</div>
+    <h1>Know what a skill does before your agent runs it.</h1>
+    <p class="lede">
+      ryzek reads <strong>SKILL.md bundles</strong> and <strong>JSON tool manifests</strong>
+      and flags prompt injection, hidden instructions, credential exfiltration, over-broad
+      permissions, and post-approval tampering — with a confidence score and a stated
+      reason on every single finding.
+    </p>
+    <div class="cmd"><span class="prompt">$</span><code>npx ryzek ./skills</code></div>
+    <p class="sub-note">Runs in CI in seconds · No dashboard login · Free tier works offline</p>
+  </div>
+</header>
+
+<div class="stats wrap" style="max-width:940px;">
+  <div class="stat">
+    <div class="num">100%</div>
+    <div class="lbl">Detection on the Snyk ToxicSkills corpus (7/7 malicious)</div>
+  </div>
+  <div class="stat">
+    <div class="num">0%</div>
+    <div class="lbl">False positives on that corpus (0/2 benign)</div>
+  </div>
+  <div class="stat">
+    <div class="num neutral">11</div>
+    <div class="lbl">Detection rules, each mapped to OWASP AST10</div>
+  </div>
+</div>
+
+<section>
+  <div class="wrap">
+    <h2>Every finding tells you how much to trust it</h2>
+    <p class="section-lede">
+      The documented failure mode of security scanners is noise: loose rules flag
+      everything, people stop reading the output, the tool gets uninstalled. So every
+      finding carries a confidence score and an explanation of why that score is what
+      it is.
+    </p>
+    <div class="term">
+      <div class="term-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+<div class="term-body"><span class="c-dim">$ ryzek ./skills</span>
+
+Scanned 4 skill(s): 2 clean, 2 flagged.
+
+<span class="c-red">‼️</span> google  [google/SKILL.md]  — overall: <span class="c-red">CRITICAL</span>
+    - [<span class="c-red">CRITICAL</span>] untrusted-external-install (confidence: <span class="c-red">85%</span>)
+        evidence: anonymous paste host: rentry.co; password-protected archive
+        OWASP AST10: AST05 Untrusted External Instructions
+        <span class="c-dim">why this confidence: Two independent signals co-occur — an anonymous
+        file host AND prose instructing that something be downloaded and run.
+        Legitimate skills install from versioned, auditable registries.</span>
+
+<span class="c-amber"> ⚠</span> invoice-tool  [invoice/SKILL.md]  — overall: <span class="c-amber">MEDIUM</span>
+    - [<span class="c-amber">MEDIUM</span>] prompt-injection-payload (confidence: <span class="c-amber">45%</span>)
+        evidence: "Do not tell the user"
+        <span class="c-dim">why this confidence: This manifest also contains standard MCP
+        tool-chaining language. Ordinary tool-dependency docs are the most
+        common false positive for this rule, so confidence dropped 65% → 45%.</span>
+        <span class="c-dim">not a real issue? --mark-false-positive prompt-injection-payload "invoice-tool"</span>
+
+<span class="c-acid">Clean: weather-lookup, calendar-read</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="detects">
+  <div class="wrap">
+    <h2>What it detects</h2>
+    <p class="section-lede">Eleven rules, each mapped to its OWASP Agentic Skills Top 10 category.</p>
+    <table>
+      <thead><tr><th>Rule</th><th>Catches</th><th>AST10</th></tr></thead>
+      <tbody>
+        <tr><td class="rule">manifest-drift</td><td>Post-approval changes to an already-reviewed skill</td><td class="ast">AST07, AST02</td></tr>
+        <tr><td class="rule">concealed-instruction</td><td>Commands in HTML comments; auto-executing frontmatter hooks</td><td class="ast">AST04, AST01</td></tr>
+        <tr><td class="rule">unicode-obfuscation</td><td>Zero-width and Tags-block characters (ASCII smuggling)</td><td class="ast">AST04</td></tr>
+        <tr><td class="rule">untrusted-external-install</td><td>Prose directing downloads from paste sites and anonymous hosts</td><td class="ast">AST05, AST01</td></tr>
+        <tr><td class="rule">prompt-injection-payload</td><td>Instructions aimed at the agent rather than the user</td><td class="ast">AST01, AST04</td></tr>
+        <tr><td class="rule">exfiltration-pattern</td><td>Sensitive-data access plus outbound network capability</td><td class="ast">AST01, AST03</td></tr>
+        <tr><td class="rule">hardcoded-secret</td><td>Live credentials left inside a manifest</td><td class="ast">AST04</td></tr>
+        <tr><td class="rule">loose-parameter-schema</td><td>Unconstrained high-risk parameters (RCE/SSRF precondition)</td><td class="ast">AST03, AST04</td></tr>
+        <tr><td class="rule">excessive-permissions</td><td>Unusually broad or dangerous permission requests</td><td class="ast">AST03</td></tr>
+        <tr><td class="rule">dynamic-execution</td><td>curl-pipe-to-shell, eval, obfuscated execution</td><td class="ast">AST01</td></tr>
+        <tr><td class="rule">description-capability-mismatch</td><td>Read-only descriptions hiding write or delete capability</td><td class="ast">AST04</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Catching the rug pull</h2>
+    <p class="section-lede">
+      Tool-poisoning attacks don't look malicious at install time. A skill passes review,
+      gets approved, and <em>then</em> its permissions quietly change — while the agent keeps
+      trusting the original approval. A single-snapshot scanner cannot catch this by
+      definition: nothing is wrong with either snapshot in isolation.
+    </p>
+    <div class="term">
+      <div class="term-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+<div class="term-body"><span class="c-dim"># Monday — reviewed, approved, baseline recorded</span>
+<span class="c-acid">Scanned 1 skill(s): 1 clean, 0 flagged.</span>
+
+<span class="c-dim"># Thursday — vendor pushes an update. Nobody re-reviews it.</span>
+<span class="c-dim"># CI runs the same scan on its normal schedule:</span>
+
+<span class="c-red">‼️</span> get_weather  — overall: <span class="c-red">CRITICAL</span>
+    - [<span class="c-red">CRITICAL</span>] manifest-drift (confidence: <span class="c-red">90%</span>)
+        evidence: permissions added: filesystem:read, network:*
+        <span class="c-dim">why this confidence: Direct hash comparison against the exact
+        version last scanned. Not a heuristic — a verified diff.</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="benchmark">
+  <div class="wrap">
+    <h2>A detection rate you can reproduce</h2>
+    <p class="section-lede">
+      Most scanners assert quality. This one publishes a number, the corpus it was
+      measured on, and the misses.
+    </p>
+    <div class="cmd" style="max-width:100%;"><span class="prompt">$</span><code>npm run benchmark</code></div>
+    <div class="callout">
+      <h3>Read this before quoting the number</h3>
+      <p>
+        Nine samples is a <strong>small corpus</strong>. 100% means ryzek catches these
+        known, published attack patterns. It says nothing about novel attacks, and it is
+        not a generalised detection rate.
+      </p>
+      <p>
+        The first run scored <strong>85.7%</strong>. The single miss — a credential-capture hook
+        buried in YAML frontmatter — exposed three real bugs, including a parser that
+        silently dropped nested frontmatter so the payload was invisible to every rule.
+        All fixed. <strong>The misses are the useful output; the score is a side effect.</strong>
+      </p>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Built for CI, not for a dashboard</h2>
+    <div class="grid">
+      <div class="cell">
+        <h3><span class="idx">01</span> Exit codes that mean something</h3>
+        <p><code>0</code> clean · <code>2</code> critical findings · <code>3</code> limit reached. Your pipeline can tell the difference.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="idx">02</span> SARIF output</h3>
+        <p>Findings land in GitHub's Security tab next to CodeQL and Dependabot, instead of buried in CI logs.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="idx">03</span> Suppressions that stick</h3>
+        <p>Mark a false positive once. Commit the file. Your whole team inherits it.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="idx">04</span> Lockfile mode</h3>
+        <p><code>--verify</code> fails the build if any skill changed or appeared since the committed baseline.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="idx">05</span> Works offline</h3>
+        <p>Free tier needs no key and makes no network calls. Air-gapped CI is fine.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="idx">06</span> Seconds, not minutes</h3>
+        <p>Static analysis over text files. No container, no runtime sandbox, no waiting.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="limits">
+  <div class="wrap">
+    <h2>What it doesn't do</h2>
+    <p class="section-lede">
+      Stated up front. A security tool that oversells itself is worse than no security
+      tool at all.
+    </p>
+    <div class="grid">
+      <div class="cell">
+        <h3>It's a pattern matcher</h3>
+        <p>Independent research in 2026 bypassed <em>every</em> public skill scanner tested, in under an hour. ryzek is in that same structural category. It raises the floor against known patterns — it is not a guarantee against a motivated attacker.</p>
+      </div>
+      <div class="cell">
+        <h3>Static analysis only</h3>
+        <p>It reads manifests and bundles. It doesn't watch runtime behaviour. It complements runtime guardrails — it doesn't replace them.</p>
+      </div>
+      <div class="cell">
+        <h3>No binary or archive inspection</h3>
+        <p>Payloads hidden inside compiled or archived files are a documented bypass and aren't covered yet.</p>
+      </div>
+      <div class="cell">
+        <h3>Drift needs a second scan</h3>
+        <p>The first scan can only establish a baseline. There's nothing to compare against yet.</p>
+      </div>
+      <div class="cell">
+        <h3>6 of 10 AST10 categories</h3>
+        <p>Isolation, governance, and cross-platform reuse are runtime or organisational concerns a static scanner can't assess.</p>
+      </div>
+      <div class="cell">
+        <h3>It's new</h3>
+        <p>No large user base yet. The reproducible benchmark is what exists in place of a track record.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <h2>Tiers</h2>
+    <p class="section-lede">Every detection rule is in every tier, including free. You never pay for security coverage — only for volume and reporting.</p>
+    <div class="tiers">
+      <div class="tier">
+        <div class="name">Free</div>
+        <div class="qty">100</div>
+        <div class="per">scans / month</div>
+        <ul><li>All 11 rules</li><li>No key required</li><li>Works fully offline</li></ul>
+      </div>
+      <div class="tier mid">
+        <div class="name">Pro</div>
+        <div class="qty">1,000</div>
+        <div class="per">scans / month</div>
+        <ul><li>All 11 rules</li><li>Usage dashboard</li><li>Scan history</li></ul>
+      </div>
+      <div class="tier">
+        <div class="name">Enterprise</div>
+        <div class="qty">∞</div>
+        <div class="per">unlimited scans</div>
+        <ul><li>All 11 rules</li><li>Usage dashboard</li><li>Multi-machine keys</li></ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-row">
+    <span>ryzek — static security scanning for AI agent skills.</span>
+    <span><a href="https://github.com/ryzekhq/ryzek">GitHub</a> · <a href="mailto:hello@ryzek.dev">Contact</a> · <a href="#benchmark">Benchmark</a> · <a href="#limits">Limitations</a></span>
+  </div>
+</footer>
+
+</body>
+</html>

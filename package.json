@@ -1,0 +1,55 @@
+{
+  "name": "ryzek",
+  "version": "1.2.1",
+  "description": "Static security scanner for AI agent skills and tool manifests. Detects prompt injection, hidden instructions, credential exfiltration, over-broad permissions, and post-approval tampering \u2014 with a confidence score on every finding.",
+  "keywords": [
+    "security",
+    "scanner",
+    "ai-agents",
+    "agent-skills",
+    "mcp",
+    "model-context-protocol",
+    "prompt-injection",
+    "static-analysis",
+    "sast",
+    "supply-chain",
+    "skill-md",
+    "owasp"
+  ],
+  "license": "MIT",
+  "author": "Ryzek <hello@ryzek.dev>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ryzekhq/ryzek.git"
+  },
+  "bugs": {
+    "url": "https://github.com/ryzekhq/ryzek/issues"
+  },
+  "homepage": "https://github.com/ryzekhq/ryzek#readme",
+  "bin": {
+    "ryzek": "dist/cli.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build",
+    "scan:clean": "ts-node --transpile-only src/cli.ts fixtures/clean",
+    "scan:malicious": "ts-node --transpile-only src/cli.ts fixtures/malicious",
+    "demo:rugpull": "npm run build && bash demo-rugpull.sh",
+    "benchmark": "npm run build && node dist/benchmark.js corpus benchmarks/toxicskills-labels.json"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  }
+}
