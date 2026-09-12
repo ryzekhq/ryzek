@@ -18,10 +18,10 @@ credentials.json
 secrets.json
 
 # Local machine state written by the CLI at runtime.
-.skillscan/
-.skillscan-feedback.json
-.skillscan-baseline.json
-**/.skillscan-*
+.ryzek/
+.ryzek-feedback.json
+.ryzek-baseline.json
+**/.ryzek-*
 
 # ---------------------------------------------------------------
 # Build artefacts and dependencies

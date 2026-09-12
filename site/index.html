@@ -164,10 +164,11 @@
 
 <nav>
   <div class="wrap">
-    <span class="logo">skill<span class="pct">-</span>scan</span>
+    <span class="logo">ryzek<span class="pct">_</span></span>
     <div class="nav-links">
       <a href="#detects">Detection</a>
       <a href="#benchmark">Benchmark</a>
+      <a href="#workflow">Workflow</a>
       <a href="#limits">Limitations</a>
       <a href="https://github.com/ryzekhq/ryzek" class="btn-ghost">GitHub</a>
     </div>
@@ -199,7 +200,7 @@
     <div class="lbl">False positives on that corpus (0/2 benign)</div>
   </div>
   <div class="stat">
-    <div class="num neutral">11</div>
+    <div class="num neutral">12</div>
     <div class="lbl">Detection rules, each mapped to OWASP AST10</div>
   </div>
 </div>
@@ -243,7 +244,7 @@ Scanned 4 skill(s): 2 clean, 2 flagged.
 <section id="detects">
   <div class="wrap">
     <h2>What it detects</h2>
-    <p class="section-lede">Eleven rules, each mapped to its OWASP Agentic Skills Top 10 category.</p>
+    <p class="section-lede">Twelve rules, each mapped to its OWASP Agentic Skills Top 10 category.</p>
     <table>
       <thead><tr><th>Rule</th><th>Catches</th><th>AST10</th></tr></thead>
       <tbody>
@@ -258,6 +259,7 @@ Scanned 4 skill(s): 2 clean, 2 flagged.
         <tr><td class="rule">excessive-permissions</td><td>Unusually broad or dangerous permission requests</td><td class="ast">AST03</td></tr>
         <tr><td class="rule">dynamic-execution</td><td>curl-pipe-to-shell, eval, obfuscated execution</td><td class="ast">AST01</td></tr>
         <tr><td class="rule">description-capability-mismatch</td><td>Read-only descriptions hiding write or delete capability</td><td class="ast">AST04</td></tr>
+        <tr><td class="rule">opaque-payload</td><td>Bundled binaries, archives, disguised executables, large encoded blobs</td><td class="ast">AST02, AST01</td></tr>
       </tbody>
     </table>
   </div>
@@ -346,6 +348,35 @@ Scanned 4 skill(s): 2 clean, 2 flagged.
   </div>
 </section>
 
+<section id="workflow">
+  <div class="wrap">
+    <h2>The part nobody thinks about until it's too late</h2>
+    <p class="section-lede">
+      Scanning the skills you know about is the easy half. These commands cover the
+      half that actually bites: skills you never knew were installed, and a scan
+      nobody remembered to re-run.
+    </p>
+    <div class="grid">
+      <div class="cell">
+        <h3><span class="idx">01</span> Find skills you forgot you installed</h3>
+        <p>Skills arrive quietly — a marketplace, a README's curl command, a teammate's PR — and nothing lists what your agent is allowed to run. <code>ryzek discover</code> walks the known install locations for Claude Code, Gemini, Cursor and Codex. It lists what it finds and opens, executes and transmits nothing.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="idx">02</span> Scan before every commit</h3>
+        <p><code>ryzek hook install</code> adds a git pre-commit hook. It blocks <strong>only</strong> on critical findings — lower severities print and let the commit through, because a hook that blocks on everything gets disabled within a day. It never overwrites an existing hook.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="idx">03</span> Telemetry is off by default</h3>
+        <p>Nothing is collected unless you run <code>ryzek telemetry on</code>. Even then it's an install ID, version, OS and counts. Never manifest content, file names, paths, findings detail or licence keys. This tool reads files that may hold credentials; silent telemetry there would betray the trust it depends on.</p>
+      </div>
+      <div class="cell">
+        <h3><span class="idx">04</span> Report a bypass</h3>
+        <p><code>ryzek report false-negative</code> writes a pre-filled Markdown report to your folder and <strong>sends nothing</strong> — you read it, strip anything sensitive, then file it. A security tool that auto-uploaded the files it was pointed at would be doing the exact thing it flags as critical. Accepted bypasses go into the benchmark corpus.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section id="limits">
   <div class="wrap">
     <h2>What it doesn't do</h2>
@@ -363,8 +394,8 @@ Scanned 4 skill(s): 2 clean, 2 flagged.
         <p>It reads manifests and bundles. It doesn't watch runtime behaviour. It complements runtime guardrails — it doesn't replace them.</p>
       </div>
       <div class="cell">
-        <h3>No binary or archive inspection</h3>
-        <p>Payloads hidden inside compiled or archived files are a documented bypass and aren't covered yet.</p>
+        <h3>Binary inspection is detection, not analysis</h3>
+        <p>It flags bundled executables, archives, filename-disguised binaries (by magic bytes) and large encoded blobs, and decompresses gzip so the contents get scanned. It cannot tell you what a compiled binary <em>does</em> — no static text scanner can. Zip extraction isn't supported, because it would need a runtime dependency this project deliberately avoids.</p>
       </div>
       <div class="cell">
         <h3>Drift needs a second scan</h3>
@@ -391,19 +422,19 @@ Scanned 4 skill(s): 2 clean, 2 flagged.
         <div class="name">Free</div>
         <div class="qty">100</div>
         <div class="per">scans / month</div>
-        <ul><li>All 11 rules</li><li>No key required</li><li>Works fully offline</li></ul>
+        <ul><li>All 12 rules</li><li>No key required</li><li>Works fully offline</li></ul>
       </div>
       <div class="tier mid">
         <div class="name">Pro</div>
         <div class="qty">1,000</div>
         <div class="per">scans / month</div>
-        <ul><li>All 11 rules</li><li>Usage dashboard</li><li>Scan history</li></ul>
+        <ul><li>All 12 rules</li><li>Usage dashboard</li><li>Scan history</li></ul>
       </div>
       <div class="tier">
         <div class="name">Enterprise</div>
         <div class="qty">∞</div>
         <div class="per">unlimited scans</div>
-        <ul><li>All 11 rules</li><li>Usage dashboard</li><li>Multi-machine keys</li></ul>
+        <ul><li>All 12 rules</li><li>Usage dashboard</li><li>Multi-machine keys</li></ul>
       </div>
     </div>
   </div>
