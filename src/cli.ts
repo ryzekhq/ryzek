@@ -4,6 +4,8 @@ import * as fs from "fs";
 import { loadManifestsFromDir } from "./loader";
 import { allRules } from "./rules";
 import { scanTools } from "./scanner";
+import { discoverMcpServers } from "./mcp-loader";
+import { statefulRulesFor, shadowMcpFindings } from "./ryzek-rules-index";
 import { formatReport } from "./report";
 import { formatSarif } from "./sarif";
 import { loadFeedback, markFalsePositive } from "./feedback";
@@ -391,7 +393,10 @@ async function main(): Promise<void> {
     );
   }
 
-  const tools = loadManifestsFromDir(dir);
+  // MCP server definitions are tools too — a server entry in .mcp.json grants
+  // capability exactly the way a skill manifest does, so it goes through the
+  // same rules rather than a separate code path.
+  const tools = [...loadManifestsFromDir(dir), ...discoverMcpServers(dir)];
 
   if (tools.length === 0) {
     console.log(`No .json tool manifests found in ${dir}`);
@@ -400,7 +405,27 @@ async function main(): Promise<void> {
 
   const feedback = loadFeedback(dir);
   const baseline = loadBaseline(dir);
-  const results = scanTools(tools, allRules, feedback, baseline);
+
+  // homoglyph-tool-name, duplicate-tool-name and toolset-mutation compare tools
+  // against each other, so they can only be built once the whole set is loaded.
+  // toolset-mutation stays quiet until a fingerprint baseline exists.
+  const stateful = statefulRulesFor(tools, []);
+  const results = scanTools(tools, [...allRules, ...stateful], feedback, baseline);
+
+  // shadow-mcp-discovery reads MCP client configs in the user's home directory,
+  // not just this project. That's outside what a plain scan should touch, so it
+  // is opt-in rather than silent.
+  if (args.includes("--shadow")) {
+    const shadow = shadowMcpFindings(dir);
+    if (shadow.length > 0) {
+      results.push({
+        toolName: "(machine)",
+        sourceFile: "MCP client configs",
+        findings: shadow,
+        overallSeverity: "medium",
+      });
+    }
+  }
 
   // --sarif [outfile] emits SARIF 2.1.0 for GitHub Code Scanning. With no
   // filename it goes to stdout (so it can be piped); with one, it's written

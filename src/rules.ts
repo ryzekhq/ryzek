@@ -1,5 +1,6 @@
 import { Finding, Rule, ToolManifest } from "./types";
 import { findEncodedBlob } from "./binary-inspect";
+import { newRules } from "./ryzek-rules-index";
 
 function finding(
   ruleId: string,
@@ -714,4 +715,5 @@ export const allRules: Rule[] = [
   untrustedExternalInstall,
   concealedInstruction,
   opaquePayload,
+  ...newRules,
 ];

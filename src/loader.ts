@@ -4,6 +4,32 @@ import { ToolManifest } from "./types";
 import { loadSkillsFromDir } from "./skill-loader";
 
 /**
+ * Package-manager and tooling files are JSON with a `name`, so the permissive
+ * loader below would otherwise treat them as agent tools. They aren't, and
+ * scanning them produces findings on every ordinary repo — `package.json` and
+ * `package-lock.json` declaring the same `name` looks exactly like two tools
+ * fighting over one name. Skipped by filename rather than by heuristic, because
+ * guessing wrong in either direction is worse than a short explicit list.
+ */
+const NOT_TOOL_MANIFESTS = new Set([
+  "package.json",
+  "package-lock.json",
+  "npm-shrinkwrap.json",
+  "tsconfig.json",
+  "jsconfig.json",
+  "composer.json",
+  "composer.lock",
+  "bower.json",
+  "deno.json",
+  "deno.lock",
+  "lerna.json",
+  "nx.json",
+  "angular.json",
+  "renovate.json",
+  "jest.config.json",
+]);
+
+/**
  * Very deliberately permissive loader: MCP servers and agent "skills" show up as JSON
  * (most common), and this reads them without assuming a rigid schema, since real-world
  * manifests vary a lot between frameworks. Anything with a name+description is treated
@@ -12,7 +38,12 @@ import { loadSkillsFromDir } from "./skill-loader";
 export function loadManifestsFromDir(dir: string): ToolManifest[] {
   const files = fs
     .readdirSync(dir)
-    .filter((f) => f.endsWith(".json") && !f.startsWith(".ryzek"));
+    .filter(
+      (f) =>
+        f.endsWith(".json") &&
+        !f.startsWith(".ryzek") &&
+        !NOT_TOOL_MANIFESTS.has(f.toLowerCase())
+    );
   const tools: ToolManifest[] = [];
 
   for (const file of files) {
