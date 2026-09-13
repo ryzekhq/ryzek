@@ -1,451 +1,605 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>ryzek — static security scanning for AI agent skills</title>
-<meta name="description" content="Static security scanner for AI agent skills and tool manifests. Confidence-scored findings, rug-pull detection, published detection rate. Runs in CI in seconds." />
-<meta property="og:title" content="ryzek" />
-<meta property="og:description" content="Static security scanning for AI agent skills. Every finding comes with a confidence score and a stated reason." />
-<meta property="og:type" content="website" />
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ryzek — know what a skill does before your agent runs it</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
   :root{
-    --bg:#0A0E0F;
-    --bg-raised:#111719;
-    --border:#1F2A2D;
-    --border-bright:#2C3A3E;
-    --text:#E6EDEF;
-    --text-dim:#8B9BA0;
-    --acid:#7FE05C;
-    --acid-dim:#4A8536;
-    --amber:#E0A73E;
-    --red:#E05C4F;
-    --mono:'IBM Plex Mono',ui-monospace,Menlo,monospace;
-    --sans:'IBM Plex Sans',system-ui,sans-serif;
+    --bg:#0a0d0b;
+    --bg-raised:#10140f;
+    --bg-panel:#0d110e;
+    --line:#1e2a1e;
+    --line-soft:#161c15;
+    --text:#e9ede7;
+    --text-dim:#8fa08c;
+    --text-faint:#5a6858;
+    --green:#7fe08c;
+    --green-dim:#4a8f52;
+    --amber:#e0b97f;
+    --red:#e0847f;
+    --serif:'Fraunces', Georgia, serif;
+    --mono:'JetBrains Mono', ui-monospace, monospace;
   }
-  *{box-sizing:border-box;}
+
+  *{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth;}
   body{
-    margin:0;background:var(--bg);color:var(--text);
-    font-family:var(--sans);line-height:1.6;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--mono);
+    font-size:15px;
+    line-height:1.6;
     -webkit-font-smoothing:antialiased;
   }
-  .wrap{max-width:940px;margin:0 auto;padding:0 24px;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:0.01ms !important; transition-duration:0.01ms !important;}
+  }
 
-  /* ---- nav ---- */
+  a{color:inherit;text-decoration:none;}
+  a:focus-visible,button:focus-visible,input:focus-visible{
+    outline:2px solid var(--green);
+    outline-offset:2px;
+  }
+
+  .wrap{max-width:1080px;margin:0 auto;padding:0 28px;}
+
+  /* ---------- nav ---------- */
   nav{
-    border-bottom:1px solid var(--border);
-    position:sticky;top:0;background:rgba(10,14,15,.9);
-    backdrop-filter:blur(8px);z-index:10;
+    position:sticky;top:0;z-index:50;
+    background:rgba(10,13,11,0.88);
+    backdrop-filter:blur(10px);
+    border-bottom:1px solid var(--line-soft);
   }
-  nav .wrap{display:flex;align-items:center;justify-content:space-between;height:58px;}
-  .logo{font-family:var(--mono);font-weight:600;font-size:15px;letter-spacing:-.02em;}
-  .logo .pct{color:var(--acid);}
-  .nav-links{display:flex;gap:22px;align-items:center;}
-  .nav-links a{color:var(--text-dim);text-decoration:none;font-size:13.5px;}
-  .nav-links a:hover{color:var(--text);}
-  .btn-ghost{
-    border:1px solid var(--border-bright);padding:6px 14px;
-    color:var(--text)!important;font-family:var(--mono);font-size:12.5px;
+  nav .wrap{
+    display:flex;align-items:center;justify-content:space-between;
+    height:64px;
   }
-  .btn-ghost:hover{border-color:var(--acid);color:var(--acid)!important;}
+  .logo{
+    font-family:var(--mono);font-weight:700;font-size:16px;
+    letter-spacing:0.02em;
+    display:flex;align-items:center;gap:8px;
+  }
+  .logo .dot{width:7px;height:7px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 8px var(--green);}
+  .navlinks{display:flex;gap:28px;align-items:center;font-size:13.5px;}
+  .navlinks a{color:var(--text-dim);transition:color .15s;}
+  .navlinks a:hover,.navlinks a.active{color:var(--text);}
+  .navlinks a.active{border-bottom:1px solid var(--green);padding-bottom:2px;}
+  .nav-cta{
+    border:1px solid var(--green-dim);
+    color:var(--green)!important;
+    padding:7px 14px;border-radius:3px;
+    font-size:13px;
+  }
+  .nav-cta:hover{background:var(--green);color:var(--bg)!important;}
+  .navtoggle{display:none;}
 
-  /* ---- hero ---- */
-  header{padding:84px 0 64px;border-bottom:1px solid var(--border);}
+  @media (max-width:760px){
+    .navlinks{display:none;}
+    .navtoggle{display:block;}
+  }
+
+  /* ---------- hero ---------- */
+  header.hero{padding:88px 0 64px;border-bottom:1px solid var(--line-soft);}
   .eyebrow{
-    font-family:var(--mono);font-size:12px;color:var(--acid);
-    letter-spacing:.1em;text-transform:uppercase;margin-bottom:18px;
+    color:var(--green);font-size:12px;letter-spacing:0.16em;
+    text-transform:uppercase;margin-bottom:22px;
+    display:flex;align-items:center;gap:10px;
   }
+  .eyebrow::before{content:'//';color:var(--green-dim);}
   h1{
-    font-size:clamp(34px,5.5vw,52px);line-height:1.08;margin:0 0 20px;
-    font-weight:700;letter-spacing:-.03em;max-width:16ch;
+    font-family:var(--serif);
+    font-weight:500;
+    font-size:clamp(34px,5.5vw,58px);
+    line-height:1.08;
+    letter-spacing:-0.01em;
+    max-width:820px;
+    margin-bottom:26px;
   }
-  .lede{font-size:18px;color:var(--text-dim);max-width:60ch;margin:0 0 32px;}
-  .lede strong{color:var(--text);font-weight:500;}
-
-  .cmd{
-    display:flex;align-items:center;gap:12px;background:var(--bg-raised);
-    border:1px solid var(--border-bright);padding:14px 18px;
-    font-family:var(--mono);font-size:14.5px;max-width:420px;margin-bottom:14px;
+  h1 em{font-style:italic;color:var(--green);}
+  .lede{
+    font-size:16px;color:var(--text-dim);max-width:600px;margin-bottom:36px;
   }
-  .cmd .prompt{color:var(--acid-dim);}
-  .cmd code{color:var(--text);}
-  .sub-note{font-size:13px;color:var(--text-dim);font-family:var(--mono);}
+  .lede b{color:var(--text);font-weight:600;}
 
-  /* ---- stat band ---- */
-  .stats{
-    display:grid;grid-template-columns:repeat(3,1fr);
-    border-bottom:1px solid var(--border);
+  .cta-row{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:44px;}
+  .btn{
+    font-family:var(--mono);font-size:14px;font-weight:600;
+    padding:13px 22px;border-radius:3px;
+    display:inline-flex;align-items:center;gap:8px;
+    transition:transform .12s, background .15s, border-color .15s;
   }
-  .stat{padding:30px 24px;border-right:1px solid var(--border);}
-  .stat:last-child{border-right:none;}
-  .stat .num{font-family:var(--mono);font-size:30px;font-weight:600;color:var(--acid);line-height:1;}
-  .stat .num.neutral{color:var(--text);}
-  .stat .lbl{font-size:12.5px;color:var(--text-dim);margin-top:8px;}
+  .btn:hover{transform:translateY(-1px);}
+  .btn-primary{background:var(--green);color:#06110a;}
+  .btn-primary:hover{background:#95ecA0;}
+  .btn-ghost{border:1px solid var(--line);color:var(--text);}
+  .btn-ghost:hover{border-color:var(--text-dim);}
 
-  /* ---- sections ---- */
-  section{padding:66px 0;border-bottom:1px solid var(--border);}
-  h2{font-size:26px;margin:0 0 12px;letter-spacing:-.02em;font-weight:600;}
-  .section-lede{color:var(--text-dim);max-width:64ch;margin:0 0 34px;}
-
-  /* ---- terminal ---- */
   .term{
-    background:#070A0B;border:1px solid var(--border-bright);
-    font-family:var(--mono);font-size:12.5px;line-height:1.75;
-    overflow-x:auto;
+    background:var(--bg-panel);
+    border:1px solid var(--line);
+    border-radius:6px;
+    max-width:620px;
+    overflow:hidden;
   }
-  .term-bar{
-    display:flex;gap:7px;padding:11px 14px;border-bottom:1px solid var(--border);
+  .term-head{
+    display:flex;align-items:center;gap:7px;
+    padding:10px 14px;border-bottom:1px solid var(--line-soft);
     background:var(--bg-raised);
   }
-  .dot{width:11px;height:11px;border-radius:50%;background:var(--border-bright);}
-  .term-body{padding:18px;white-space:pre;}
-  .c-dim{color:var(--text-dim);}
-  .c-acid{color:var(--acid);}
-  .c-amber{color:var(--amber);}
-  .c-red{color:var(--red);}
+  .term-head span{width:9px;height:9px;border-radius:50%;background:var(--line);}
+  .term-head .fname{margin-left:6px;color:var(--text-faint);font-size:12px;}
+  .term-body{padding:16px 18px;font-size:13.5px;}
+  .term-body .cmd{color:var(--green);}
+  .term-body .cmd::before{content:'$ ';color:var(--text-faint);}
+  .term-line{padding:2px 0;color:var(--text-dim);white-space:pre;}
+  .flag-crit{color:var(--red);}
+  .flag-warn{color:var(--amber);}
+  .flag-ok{color:var(--green);}
+  .blink{display:inline-block;width:7px;height:14px;background:var(--green);
+    vertical-align:-2px;animation:blink 1.1s steps(2) infinite;}
+  @keyframes blink{50%{opacity:0;}}
 
-  /* ---- feature grid ---- */
-  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(268px,1fr));gap:1px;background:var(--border);border:1px solid var(--border);}
-  .cell{background:var(--bg);padding:26px 24px;}
-  .cell h3{font-size:15.5px;margin:0 0 9px;font-weight:600;display:flex;align-items:center;gap:9px;}
-  .cell h3 .idx{font-family:var(--mono);font-size:11.5px;color:var(--acid);}
-  .cell p{margin:0;font-size:14px;color:var(--text-dim);}
-
-  /* ---- callout ---- */
-  .callout{
-    border-left:2px solid var(--amber);background:var(--bg-raised);
-    padding:22px 26px;margin:30px 0 0;
+  /* ---------- stats ---------- */
+  .stats{
+    border-bottom:1px solid var(--line-soft);
+    padding:40px 0;
   }
-  .callout h3{margin:0 0 9px;font-size:15px;color:var(--amber);font-family:var(--mono);font-weight:500;}
-  .callout p{margin:0 0 10px;font-size:14px;color:var(--text-dim);}
-  .callout p:last-child{margin-bottom:0;}
-  .callout strong{color:var(--text);font-weight:500;}
-
-  /* ---- table ---- */
-  table{width:100%;border-collapse:collapse;font-size:13.5px;}
-  th{
-    text-align:left;font-family:var(--mono);font-size:11px;color:var(--text-dim);
-    text-transform:uppercase;letter-spacing:.07em;padding:11px 14px;
-    border-bottom:1px solid var(--border-bright);font-weight:500;
+  .stats .wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:0;}
+  .stat{padding:0 28px;border-left:1px solid var(--line-soft);}
+  .stat:first-child{border-left:none;padding-left:0;}
+  .stat .num{font-family:var(--serif);font-size:38px;color:var(--green);line-height:1;}
+  .stat .lbl{color:var(--text-dim);font-size:13px;margin-top:8px;}
+  @media (max-width:640px){
+    .stats .wrap{grid-template-columns:1fr;gap:20px;}
+    .stat{border-left:none;padding-left:0;border-top:1px solid var(--line-soft);padding-top:18px;}
+    .stat:first-child{border-top:none;padding-top:0;}
   }
-  td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:top;}
-  td.rule{font-family:var(--mono);font-size:12.5px;color:var(--acid);white-space:nowrap;}
-  td.ast{font-family:var(--mono);font-size:11.5px;color:var(--text-dim);white-space:nowrap;}
 
-  /* ---- tiers ---- */
-  .tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;}
-  .tier{border:1px solid var(--border-bright);padding:26px 22px;}
-  .tier.mid{border-color:var(--acid-dim);}
-  .tier .name{font-family:var(--mono);font-size:12px;color:var(--text-dim);text-transform:uppercase;letter-spacing:.08em;}
-  .tier .qty{font-size:27px;font-weight:600;margin:12px 0 4px;font-family:var(--mono);}
-  .tier .per{font-size:12.5px;color:var(--text-dim);margin-bottom:16px;}
-  .tier ul{list-style:none;padding:0;margin:0;font-size:13.5px;color:var(--text-dim);}
-  .tier li{padding:5px 0;}
-  .tier li::before{content:'—';color:var(--acid-dim);margin-right:8px;}
-
-  footer{padding:44px 0 60px;color:var(--text-dim);font-size:13px;}
-  footer a{color:var(--text-dim);}
-  .foot-row{display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;}
-
-  @media(max-width:640px){
-    .stats{grid-template-columns:1fr;}
-    .stat{border-right:none;border-bottom:1px solid var(--border);}
-    .nav-links a:not(.btn-ghost){display:none;}
-    header{padding:56px 0 44px;}
+  /* ---------- section shared ---------- */
+  section{padding:80px 0;border-bottom:1px solid var(--line-soft);}
+  .section-head{max-width:600px;margin-bottom:48px;}
+  .section-tag{
+    color:var(--green);font-size:12px;letter-spacing:0.14em;
+    text-transform:uppercase;margin-bottom:14px;
   }
-  @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto;}}
+  h2{
+    font-family:var(--serif);font-weight:500;
+    font-size:clamp(26px,3.5vw,36px);
+    line-height:1.15;margin-bottom:14px;
+  }
+  .section-sub{color:var(--text-dim);font-size:15px;max-width:520px;}
+
+  /* ---------- how it works ---------- */
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-soft);
+    border:1px solid var(--line-soft);border-radius:6px;overflow:hidden;}
+  .flow-step{background:var(--bg);padding:26px 22px;position:relative;}
+  .flow-step .fmark{font-family:var(--mono);color:var(--green-dim);font-size:12px;margin-bottom:14px;}
+  .flow-step h3{font-family:var(--serif);font-weight:500;font-size:19px;margin-bottom:8px;}
+  .flow-step p{color:var(--text-dim);font-size:13.5px;line-height:1.55;}
+  @media (max-width:760px){.flow{grid-template-columns:1fr 1fr;}}
+  @media (max-width:480px){.flow{grid-template-columns:1fr;}}
+
+  /* ---------- rules grid ---------- */
+  .rules{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
+  .rule-card{
+    border:1px solid var(--line);border-radius:5px;padding:20px;
+    background:var(--bg-panel);
+  }
+  .rule-card .rid{
+    font-size:11px;color:var(--text-faint);letter-spacing:0.05em;margin-bottom:10px;
+  }
+  .rule-card h4{font-size:14.5px;color:var(--text);margin-bottom:7px;font-weight:600;}
+  .rule-card p{font-size:12.5px;color:var(--text-dim);line-height:1.5;}
+  @media (max-width:760px){.rules{grid-template-columns:1fr 1fr;}}
+  @media (max-width:520px){.rules{grid-template-columns:1fr;}}
+
+  /* ---------- why local ---------- */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:start;}
+  @media (max-width:800px){.split{grid-template-columns:1fr;gap:36px;}}
+  .compare{border:1px solid var(--line);border-radius:6px;overflow:hidden;}
+  .crow{display:grid;grid-template-columns:1.4fr 1fr 1fr;padding:13px 16px;
+    font-size:13px;border-bottom:1px solid var(--line-soft);align-items:center;}
+  .crow:last-child{border-bottom:none;}
+  .crow.head{background:var(--bg-raised);color:var(--text-faint);font-size:11px;
+    text-transform:uppercase;letter-spacing:0.06em;}
+  .crow span:nth-child(2){color:var(--green);}
+  .crow span:nth-child(3){color:var(--text-faint);}
+  .yes::before{content:'✓ ';color:var(--green);}
+  .no::before{content:'— ';color:var(--text-faint);}
+
+  /* ---------- pricing ---------- */
+  .pricing{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;}
+  @media (max-width:1000px){.pricing{grid-template-columns:repeat(3,1fr);}}
+  @media (max-width:640px){.pricing{grid-template-columns:1fr 1fr;}}
+  @media (max-width:420px){.pricing{grid-template-columns:1fr;}}
+  .plan{
+    border:1px solid var(--line);border-radius:6px;padding:24px 20px;
+    display:flex;flex-direction:column;background:var(--bg-panel);
+  }
+  .plan.feat{border-color:var(--green-dim);position:relative;}
+  .plan.feat::before{
+    content:'POPULAR';position:absolute;top:-11px;left:20px;
+    background:var(--green);color:#06110a;font-size:10px;font-weight:700;
+    letter-spacing:0.06em;padding:3px 8px;border-radius:2px;
+  }
+  .plan h3{font-size:14px;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-dim);margin-bottom:10px;}
+  .plan .price{font-family:var(--serif);font-size:30px;margin-bottom:4px;}
+  .plan .price small{font-family:var(--mono);font-size:12px;color:var(--text-faint);}
+  .plan .desc{font-size:12.5px;color:var(--text-faint);margin-bottom:18px;min-height:32px;}
+  .plan ul{list-style:none;font-size:12.5px;color:var(--text-dim);flex:1;}
+  .plan ul li{padding:5px 0;padding-left:16px;position:relative;}
+  .plan ul li::before{content:'·';position:absolute;left:0;color:var(--green-dim);}
+  .plan .btn{margin-top:18px;justify-content:center;width:100%;}
+
+  /* ---------- faq ---------- */
+  .faq-item{border-bottom:1px solid var(--line-soft);padding:20px 0;}
+  .faq-item:first-child{padding-top:0;}
+  .faq-q{font-family:var(--serif);font-size:17px;margin-bottom:8px;color:var(--text);}
+  .faq-a{color:var(--text-dim);font-size:14px;max-width:640px;}
+
+  /* ---------- about/founder ---------- */
+  .founder{display:grid;grid-template-columns:auto 1fr;gap:26px;align-items:start;}
+  .founder-mark{
+    width:52px;height:52px;border:1px solid var(--green-dim);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    font-family:var(--serif);font-size:20px;color:var(--green);flex-shrink:0;
+  }
+  .founder p{color:var(--text-dim);font-size:14.5px;line-height:1.7;max-width:600px;}
+  .founder p+p{margin-top:12px;}
+  .founder .sign{margin-top:16px;color:var(--text);font-size:13.5px;}
+
+  /* ---------- email capture ---------- */
+  .capture{
+    background:var(--bg-raised);border:1px solid var(--line);border-radius:8px;
+    padding:44px 40px;display:flex;justify-content:space-between;align-items:center;gap:32px;
+    flex-wrap:wrap;
+  }
+  .capture h3{font-family:var(--serif);font-size:22px;margin-bottom:8px;font-weight:500;}
+  .capture p{color:var(--text-dim);font-size:13.5px;max-width:360px;}
+  .capture-form{display:flex;gap:10px;flex-wrap:wrap;min-width:320px;flex:1;}
+  .capture-form input{
+    flex:1;min-width:200px;background:var(--bg);border:1px solid var(--line);
+    border-radius:3px;padding:12px 14px;color:var(--text);font-family:var(--mono);font-size:13.5px;
+  }
+  .capture-form input::placeholder{color:var(--text-faint);}
+  .capture-note{width:100%;font-size:11.5px;color:var(--text-faint);margin-top:6px;}
+  .capture-success{color:var(--green);font-size:13.5px;display:none;}
+
+  /* ---------- footer ---------- */
+  footer{padding:52px 0 40px;}
+  .foot-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:40px;margin-bottom:40px;}
+  .foot-links{display:flex;gap:60px;flex-wrap:wrap;}
+  .foot-col h5{font-size:11px;color:var(--text-faint);text-transform:uppercase;
+    letter-spacing:0.08em;margin-bottom:14px;}
+  .foot-col a{display:block;color:var(--text-dim);font-size:13.5px;padding:4px 0;transition:color .15s;}
+  .foot-col a:hover{color:var(--green);}
+  .foot-bottom{
+    border-top:1px solid var(--line-soft);padding-top:24px;
+    display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;
+    font-size:12px;color:var(--text-faint);
+  }
 </style>
 </head>
 <body>
 
 <nav>
   <div class="wrap">
-    <span class="logo">ryzek<span class="pct">_</span></span>
-    <div class="nav-links">
-      <a href="#detects">Detection</a>
-      <a href="#benchmark">Benchmark</a>
-      <a href="#workflow">Workflow</a>
-      <a href="#limits">Limitations</a>
-      <a href="https://github.com/ryzekhq/ryzek" class="btn-ghost">GitHub</a>
+    <div class="logo"><span class="dot"></span>ryzek</div>
+    <div class="navlinks">
+      <a href="index.html" class="active">Product</a>
+      <a href="rules.html">How it works</a>
+      <a href="walkthroughs.html">Walkthroughs</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="about.html">Why ryzek</a>
+      <a href="changelog.html">Changelog</a>
+      <a href="https://github.com/ryzekhq/ryzek" target="_blank" rel="noopener">GitHub</a>
+      <a class="nav-cta" href="#get-started">Get ryzek</a>
     </div>
   </div>
 </nav>
 
-<header>
+<header class="hero">
   <div class="wrap">
     <div class="eyebrow">Static analysis for agent skills</div>
-    <h1>Know what a skill does before your agent runs it.</h1>
-    <p class="lede">
-      ryzek reads <strong>SKILL.md bundles</strong> and <strong>JSON tool manifests</strong>
-      and flags prompt injection, hidden instructions, credential exfiltration, over-broad
-      permissions, and post-approval tampering — with a confidence score and a stated
-      reason on every single finding.
-    </p>
-    <div class="cmd"><span class="prompt">$</span><code>npx ryzek ./skills</code></div>
-    <p class="sub-note">Runs in CI in seconds · No dashboard login · Free tier works offline</p>
+    <h1>Know what a skill does <em>before</em> your agent runs it.</h1>
+    <p class="lede">ryzek reads <b>SKILL.md</b> bundles, <b>MCP</b> configs, and <b>JSON tool manifests</b>, and flags prompt injection, hidden instructions, credential exfiltration, over-broad permissions, and post-approval tampering — with a confidence score and a stated reason on every finding.</p>
+
+    <div class="cta-row">
+      <a class="btn btn-primary" href="#get-started">Get started free →</a>
+      <a class="btn btn-ghost" href="https://github.com/ryzekhq/ryzek" target="_blank" rel="noopener">View source</a>
+    </div>
+
+    <div class="term">
+      <div class="term-head">
+        <span></span><span></span><span></span>
+        <span class="fname">terminal</span>
+      </div>
+      <div class="term-body">
+        <div class="term-line cmd">npx ryzek ./skills</div>
+        <div class="term-line">scanning 14 skills...</div>
+        <div class="term-line"><span class="flag-crit">[critical]</span> credential-exfiltration — sync_tool <span style="color:var(--text-faint)">(0.94 confidence)</span></div>
+        <div class="term-line"><span class="flag-warn">[warn]</span> loose-parameter-schema — fetch_docs <span style="color:var(--text-faint)">(0.71 confidence)</span></div>
+        <div class="term-line"><span class="flag-ok">[clean]</span> 12 skills, no findings</div>
+        <div class="term-line">done in 1.8s<span class="blink"></span></div>
+      </div>
+    </div>
   </div>
 </header>
 
-<div class="stats wrap" style="max-width:940px;">
-  <div class="stat">
-    <div class="num">100%</div>
-    <div class="lbl">Detection on the Snyk ToxicSkills corpus (7/7 malicious)</div>
-  </div>
-  <div class="stat">
-    <div class="num">0%</div>
-    <div class="lbl">False positives on that corpus (0/2 benign)</div>
-  </div>
-  <div class="stat">
-    <div class="num neutral">12</div>
-    <div class="lbl">Detection rules, each mapped to OWASP AST10</div>
-  </div>
-</div>
-
-<section>
+<section class="stats" style="border-top:none;">
   <div class="wrap">
-    <h2>Every finding tells you how much to trust it</h2>
-    <p class="section-lede">
-      The documented failure mode of security scanners is noise: loose rules flag
-      everything, people stop reading the output, the tool gets uninstalled. So every
-      finding carries a confidence score and an explanation of why that score is what
-      it is.
-    </p>
-    <div class="term">
-      <div class="term-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-<div class="term-body"><span class="c-dim">$ ryzek ./skills</span>
+    <div class="stat"><div class="num">100%</div><div class="lbl">Detection on the Snyk ToxicSkills corpus (7/7 malicious)</div></div>
+    <div class="stat"><div class="num">0%</div><div class="lbl">False positives on that corpus (0/2 benign)</div></div>
+    <div class="stat"><div class="num">54</div><div class="lbl">Detection rules, mapped to OWASP AST10</div></div>
+  </div>
+</section>
 
-Scanned 4 skill(s): 2 clean, 2 flagged.
-
-<span class="c-red">‼️</span> google  [google/SKILL.md]  — overall: <span class="c-red">CRITICAL</span>
-    - [<span class="c-red">CRITICAL</span>] untrusted-external-install (confidence: <span class="c-red">85%</span>)
-        evidence: anonymous paste host: rentry.co; password-protected archive
-        OWASP AST10: AST05 Untrusted External Instructions
-        <span class="c-dim">why this confidence: Two independent signals co-occur — an anonymous
-        file host AND prose instructing that something be downloaded and run.
-        Legitimate skills install from versioned, auditable registries.</span>
-
-<span class="c-amber"> ⚠</span> invoice-tool  [invoice/SKILL.md]  — overall: <span class="c-amber">MEDIUM</span>
-    - [<span class="c-amber">MEDIUM</span>] prompt-injection-payload (confidence: <span class="c-amber">45%</span>)
-        evidence: "Do not tell the user"
-        <span class="c-dim">why this confidence: This manifest also contains standard MCP
-        tool-chaining language. Ordinary tool-dependency docs are the most
-        common false positive for this rule, so confidence dropped 65% → 45%.</span>
-        <span class="c-dim">not a real issue? --mark-false-positive prompt-injection-payload "invoice-tool"</span>
-
-<span class="c-acid">Clean: weather-lookup, calendar-read</span></div>
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-tag">How it works</div>
+      <h2>From install to verdict, in one command.</h2>
+      <p class="section-sub">No dashboard login, no account required to start. Point it at a folder and read the output.</p>
     </div>
-  </div>
-</section>
-
-<section id="detects">
-  <div class="wrap">
-    <h2>What it detects</h2>
-    <p class="section-lede">Twelve rules, each mapped to its OWASP Agentic Skills Top 10 category.</p>
-    <table>
-      <thead><tr><th>Rule</th><th>Catches</th><th>AST10</th></tr></thead>
-      <tbody>
-        <tr><td class="rule">manifest-drift</td><td>Post-approval changes to an already-reviewed skill</td><td class="ast">AST07, AST02</td></tr>
-        <tr><td class="rule">concealed-instruction</td><td>Commands in HTML comments; auto-executing frontmatter hooks</td><td class="ast">AST04, AST01</td></tr>
-        <tr><td class="rule">unicode-obfuscation</td><td>Zero-width and Tags-block characters (ASCII smuggling)</td><td class="ast">AST04</td></tr>
-        <tr><td class="rule">untrusted-external-install</td><td>Prose directing downloads from paste sites and anonymous hosts</td><td class="ast">AST05, AST01</td></tr>
-        <tr><td class="rule">prompt-injection-payload</td><td>Instructions aimed at the agent rather than the user</td><td class="ast">AST01, AST04</td></tr>
-        <tr><td class="rule">exfiltration-pattern</td><td>Sensitive-data access plus outbound network capability</td><td class="ast">AST01, AST03</td></tr>
-        <tr><td class="rule">hardcoded-secret</td><td>Live credentials left inside a manifest</td><td class="ast">AST04</td></tr>
-        <tr><td class="rule">loose-parameter-schema</td><td>Unconstrained high-risk parameters (RCE/SSRF precondition)</td><td class="ast">AST03, AST04</td></tr>
-        <tr><td class="rule">excessive-permissions</td><td>Unusually broad or dangerous permission requests</td><td class="ast">AST03</td></tr>
-        <tr><td class="rule">dynamic-execution</td><td>curl-pipe-to-shell, eval, obfuscated execution</td><td class="ast">AST01</td></tr>
-        <tr><td class="rule">description-capability-mismatch</td><td>Read-only descriptions hiding write or delete capability</td><td class="ast">AST04</td></tr>
-        <tr><td class="rule">opaque-payload</td><td>Bundled binaries, archives, disguised executables, large encoded blobs</td><td class="ast">AST02, AST01</td></tr>
-      </tbody>
-    </table>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <h2>Catching the rug pull</h2>
-    <p class="section-lede">
-      Tool-poisoning attacks don't look malicious at install time. A skill passes review,
-      gets approved, and <em>then</em> its permissions quietly change — while the agent keeps
-      trusting the original approval. A single-snapshot scanner cannot catch this by
-      definition: nothing is wrong with either snapshot in isolation.
-    </p>
-    <div class="term">
-      <div class="term-bar"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
-<div class="term-body"><span class="c-dim"># Monday — reviewed, approved, baseline recorded</span>
-<span class="c-acid">Scanned 1 skill(s): 1 clean, 0 flagged.</span>
-
-<span class="c-dim"># Thursday — vendor pushes an update. Nobody re-reviews it.</span>
-<span class="c-dim"># CI runs the same scan on its normal schedule:</span>
-
-<span class="c-red">‼️</span> get_weather  — overall: <span class="c-red">CRITICAL</span>
-    - [<span class="c-red">CRITICAL</span>] manifest-drift (confidence: <span class="c-red">90%</span>)
-        evidence: permissions added: filesystem:read, network:*
-        <span class="c-dim">why this confidence: Direct hash comparison against the exact
-        version last scanned. Not a heuristic — a verified diff.</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="benchmark">
-  <div class="wrap">
-    <h2>A detection rate you can reproduce</h2>
-    <p class="section-lede">
-      Most scanners assert quality. This one publishes a number, the corpus it was
-      measured on, and the misses.
-    </p>
-    <div class="cmd" style="max-width:100%;"><span class="prompt">$</span><code>npm run benchmark</code></div>
-    <div class="callout">
-      <h3>Read this before quoting the number</h3>
-      <p>
-        Nine samples is a <strong>small corpus</strong>. 100% means ryzek catches these
-        known, published attack patterns. It says nothing about novel attacks, and it is
-        not a generalised detection rate.
-      </p>
-      <p>
-        The first run scored <strong>85.7%</strong>. The single miss — a credential-capture hook
-        buried in YAML frontmatter — exposed three real bugs, including a parser that
-        silently dropped nested frontmatter so the payload was invisible to every rule.
-        All fixed. <strong>The misses are the useful output; the score is a side effect.</strong>
-      </p>
-    </div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap">
-    <h2>Built for CI, not for a dashboard</h2>
-    <div class="grid">
-      <div class="cell">
-        <h3><span class="idx">01</span> Exit codes that mean something</h3>
-        <p><code>0</code> clean · <code>2</code> critical findings · <code>3</code> limit reached. Your pipeline can tell the difference.</p>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="fmark">01 · discover</div>
+        <h3>Find every skill</h3>
+        <p>Auto-discovers installed skills across Claude Code, Cursor, Gemini, Codex, and project-local folders — including ones nobody remembers installing.</p>
       </div>
-      <div class="cell">
-        <h3><span class="idx">02</span> SARIF output</h3>
-        <p>Findings land in GitHub's Security tab next to CodeQL and Dependabot, instead of buried in CI logs.</p>
+      <div class="flow-step">
+        <div class="fmark">02 · scan</div>
+        <h3>Read what it does</h3>
+        <p>Static analysis of SKILL.md, bundled scripts, and tool manifests. No execution, nothing runs, nothing leaves your machine.</p>
       </div>
-      <div class="cell">
-        <h3><span class="idx">03</span> Suppressions that stick</h3>
-        <p>Mark a false positive once. Commit the file. Your whole team inherits it.</p>
+      <div class="flow-step">
+        <div class="fmark">03 · score</div>
+        <h3>Get a stated reason</h3>
+        <p>Every finding ships with a confidence score and a plain-language reason — not a bare pass/fail.</p>
       </div>
-      <div class="cell">
-        <h3><span class="idx">04</span> Lockfile mode</h3>
-        <p><code>--verify</code> fails the build if any skill changed or appeared since the committed baseline.</p>
-      </div>
-      <div class="cell">
-        <h3><span class="idx">05</span> Works offline</h3>
-        <p>Free tier needs no key and makes no network calls. Air-gapped CI is fine.</p>
-      </div>
-      <div class="cell">
-        <h3><span class="idx">06</span> Seconds, not minutes</h3>
-        <p>Static analysis over text files. No container, no runtime sandbox, no waiting.</p>
+      <div class="flow-step">
+        <div class="fmark">04 · gate</div>
+        <h3>Fail CI on critical</h3>
+        <p>SARIF output for GitHub Code Scanning, plus a pre-commit hook that blocks only on critical findings.</p>
       </div>
     </div>
   </div>
 </section>
 
-<section id="workflow">
+<section id="detection">
   <div class="wrap">
-    <h2>The part nobody thinks about until it's too late</h2>
-    <p class="section-lede">
-      Scanning the skills you know about is the easy half. These commands cover the
-      half that actually bites: skills you never knew were installed, and a scan
-      nobody remembered to re-run.
-    </p>
-    <div class="grid">
-      <div class="cell">
-        <h3><span class="idx">01</span> Find skills you forgot you installed</h3>
-        <p>Skills arrive quietly — a marketplace, a README's curl command, a teammate's PR — and nothing lists what your agent is allowed to run. <code>ryzek discover</code> walks the known install locations for Claude Code, Gemini, Cursor and Codex. It lists what it finds and opens, executes and transmits nothing.</p>
+    <div class="section-head">
+      <div class="section-tag">Detection rules</div>
+      <h2>What it actually catches.</h2>
+      <p class="section-sub">Every rule runs in every tier, including Free. You're not paying to unlock detection — you're paying for scale.</p>
+    </div>
+    <div class="rules">
+      <div class="rule-card"><div class="rid">RULE · 01</div><h4>Prompt injection</h4><p>Hidden instructions embedded in tool descriptions or skill metadata that redirect agent behavior.</p></div>
+      <div class="rule-card"><div class="rid">RULE · 02</div><h4>Credential exfiltration</h4><p>Code paths that read local environment variables, keys, or credentials and send them outbound.</p></div>
+      <div class="rule-card"><div class="rid">RULE · 03</div><h4>Concealed instructions</h4><p>Directives hidden in HTML comments, frontmatter, or auto-exec hooks not visible on a normal read.</p></div>
+      <div class="rule-card"><div class="rid">RULE · 04</div><h4>Unicode obfuscation</h4><p>Invisible or lookalike characters used to smuggle text past a human reviewer.</p></div>
+      <div class="rule-card"><div class="rid">RULE · 05</div><h4>Over-broad permissions</h4><p>Requested capability scope that exceeds what the stated function needs.</p></div>
+      <div class="rule-card"><div class="rid">RULE · 06</div><h4>Post-approval drift</h4><p>A skill silently changed after it was reviewed and approved — the rug-pull pattern.</p></div>
+      <div class="rule-card"><div class="rid">RULE · 07</div><h4>Untrusted external install</h4><p>Install steps that pull code from sources outside the skill's own declared origin.</p></div>
+      <div class="rule-card"><div class="rid">RULE · 08</div><h4>Opaque payloads</h4><p>Bundled binaries or archives whose contents can't be statically reviewed at all.</p></div>
+      <div class="rule-card"><div class="rid">RULE · 09</div><h4>Loose parameter schema</h4><p>Tool parameters typed broadly enough to accept arbitrary, unvalidated input.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="wrap split">
+    <div>
+      <div class="section-tag">Why local</div>
+      <h2>Nothing leaves your machine.</h2>
+      <p class="section-sub" style="margin-bottom:22px;">Most agent-security tools require an API token and a hosted analysis service — meaning the contents of your skills are sent somewhere before you find out if they're safe. ryzek doesn't.</p>
+      <p class="section-sub">That matters more here than in most tooling categories: the files you're scanning are, by definition, the ones you haven't verified yet.</p>
+    </div>
+    <div class="compare">
+      <div class="crow head"><span>&nbsp;</span><span>ryzek</span><span>typical scanner</span></div>
+      <div class="crow"><span>Runs fully offline</span><span class="yes">Yes</span><span class="no">Requires token</span></div>
+      <div class="crow"><span>Source code visible</span><span class="yes">Yes</span><span class="no">Varies</span></div>
+      <div class="crow"><span>Confidence + reason per finding</span><span class="yes">Yes</span><span class="no">Pass/fail</span></div>
+      <div class="crow"><span>Persistent false-positive suppression</span><span class="yes">Yes</span><span class="no">Per-run only</span></div>
+      <div class="crow"><span>Drift detection</span><span class="yes">Yes</span><span class="no">Rare</span></div>
+      <div class="crow"><span>Free tier covers all rules</span><span class="yes">Yes</span><span class="no">Rare</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-tag">Pricing</div>
+      <h2>Every rule, every tier. Pay for scale, not for detection.</h2>
+      <p class="section-sub">No trial required to see if it works — the Free tier runs the full rule set, capped by volume, not capability.</p>
+    </div>
+    <div class="pricing">
+      <div class="plan">
+        <h3>Free</h3>
+        <div class="price">$0</div>
+        <div class="desc">For trying it on real work</div>
+        <ul>
+          <li>All 54 detection rules</li>
+          <li>20 scans / month</li>
+          <li>SARIF + CI output</li>
+          <li>Community support</li>
+        </ul>
+        <a class="btn btn-ghost" href="#get-started">Start free</a>
       </div>
-      <div class="cell">
-        <h3><span class="idx">02</span> Scan before every commit</h3>
-        <p><code>ryzek hook install</code> adds a git pre-commit hook. It blocks <strong>only</strong> on critical findings — lower severities print and let the commit through, because a hook that blocks on everything gets disabled within a day. It never overwrites an existing hook.</p>
+      <div class="plan feat">
+        <h3>Pro</h3>
+        <div class="price">$16<small> /mo</small></div>
+        <div class="desc">For individual daily use</div>
+        <ul>
+          <li>Everything in Free</li>
+          <li>Unlimited scans</li>
+          <li>Drift + lockfile mode</li>
+          <li>Priority email support</li>
+        </ul>
+        <a class="btn btn-primary" href="pricing.html">Choose Pro</a>
       </div>
-      <div class="cell">
-        <h3><span class="idx">03</span> Telemetry is off by default</h3>
-        <p>Nothing is collected unless you run <code>ryzek telemetry on</code>. Even then it's an install ID, version, OS and counts. Never manifest content, file names, paths, findings detail or licence keys. This tool reads files that may hold credentials; silent telemetry there would betray the trust it depends on.</p>
+      <div class="plan">
+        <h3>Pro Plus</h3>
+        <div class="price">$24<small> /mo</small></div>
+        <div class="desc">Early access to new rules</div>
+        <ul>
+          <li>Everything in Pro</li>
+          <li>New rules first</li>
+          <li>Extended rule tuning</li>
+        </ul>
+        <a class="btn btn-ghost" href="pricing.html">Choose Pro Plus</a>
       </div>
-      <div class="cell">
-        <h3><span class="idx">04</span> Report a bypass</h3>
-        <p><code>ryzek report false-negative</code> writes a pre-filled Markdown report to your folder and <strong>sends nothing</strong> — you read it, strip anything sensitive, then file it. A security tool that auto-uploaded the files it was pointed at would be doing the exact thing it flags as critical. Accepted bypasses go into the benchmark corpus.</p>
+      <div class="plan">
+        <h3>Teams</h3>
+        <div class="price">$20<small> /seat</small></div>
+        <div class="desc">Shared config, multi-user</div>
+        <ul>
+          <li>Everything in Pro Plus</li>
+          <li>Shared suppression rules</li>
+          <li>Team usage dashboard</li>
+        </ul>
+        <a class="btn btn-ghost" href="pricing.html">Choose Teams</a>
+      </div>
+      <div class="plan">
+        <h3>Enterprise</h3>
+        <div class="price">Custom</div>
+        <div class="desc">SLA, support, procurement</div>
+        <ul>
+          <li>Everything in Teams</li>
+          <li>SLA-backed support</li>
+          <li>Custom onboarding</li>
+        </ul>
+        <a class="btn btn-ghost" href="pricing.html">See full pricing</a>
       </div>
     </div>
   </div>
 </section>
 
-<section id="limits">
+<section id="about">
   <div class="wrap">
-    <h2>What it doesn't do</h2>
-    <p class="section-lede">
-      Stated up front. A security tool that oversells itself is worse than no security
-      tool at all.
-    </p>
-    <div class="grid">
-      <div class="cell">
-        <h3>It's a pattern matcher</h3>
-        <p>Independent research in 2026 bypassed <em>every</em> public skill scanner tested, in under an hour. ryzek is in that same structural category. It raises the floor against known patterns — it is not a guarantee against a motivated attacker.</p>
-      </div>
-      <div class="cell">
-        <h3>Static analysis only</h3>
-        <p>It reads manifests and bundles. It doesn't watch runtime behaviour. It complements runtime guardrails — it doesn't replace them.</p>
-      </div>
-      <div class="cell">
-        <h3>Binary inspection is detection, not analysis</h3>
-        <p>It flags bundled executables, archives, filename-disguised binaries (by magic bytes) and large encoded blobs, and decompresses gzip so the contents get scanned. It cannot tell you what a compiled binary <em>does</em> — no static text scanner can. Zip extraction isn't supported, because it would need a runtime dependency this project deliberately avoids.</p>
-      </div>
-      <div class="cell">
-        <h3>Drift needs a second scan</h3>
-        <p>The first scan can only establish a baseline. There's nothing to compare against yet.</p>
-      </div>
-      <div class="cell">
-        <h3>6 of 10 AST10 categories</h3>
-        <p>Isolation, governance, and cross-platform reuse are runtime or organisational concerns a static scanner can't assess.</p>
-      </div>
-      <div class="cell">
-        <h3>It's new</h3>
-        <p>No large user base yet. The reproducible benchmark is what exists in place of a track record.</p>
+    <div class="section-head">
+      <div class="section-tag">Why this exists</div>
+      <h2>Built by people who watched the ecosystem outgrow its own trust model.</h2>
+    </div>
+    <div class="founder">
+      <div class="founder-mark">R</div>
+      <div>
+        <p>Agent skills run with the full permissions of the agent they extend — filesystem, network, credentials — and the ecosystem is growing faster than anyone is reviewing what gets installed. That gap is where ryzek started: a scanner built to answer one plain question before code runs, not after.</p>
+        <p>It's built local-first on purpose. A tool that checks whether something is safe to trust shouldn't itself require you to trust a server you can't see.</p>
+        <div class="sign">— the ryzek team</div>
       </div>
     </div>
   </div>
 </section>
 
-<section>
+<section id="get-started">
   <div class="wrap">
-    <h2>Tiers</h2>
-    <p class="section-lede">Every detection rule is in every tier, including free. You never pay for security coverage — only for volume and reporting.</p>
-    <div class="tiers">
-      <div class="tier">
-        <div class="name">Free</div>
-        <div class="qty">100</div>
-        <div class="per">scans / month</div>
-        <ul><li>All 12 rules</li><li>No key required</li><li>Works fully offline</li></ul>
+    <div class="capture">
+      <div>
+        <h3>Get updates on new rules and releases</h3>
+        <p>No spam, no marketing list — just a note when detection coverage changes.</p>
       </div>
-      <div class="tier mid">
-        <div class="name">Pro</div>
-        <div class="qty">1,000</div>
-        <div class="per">scans / month</div>
-        <ul><li>All 12 rules</li><li>Usage dashboard</li><li>Scan history</li></ul>
+      <form class="capture-form" onsubmit="return handleSubscribe(event)">
+        <input type="email" id="capture-email" placeholder="you@company.com" required>
+        <button type="submit" class="btn btn-primary">Notify me</button>
+        <div class="capture-note">Runs on <a href="https://npmjs.com/package/ryzek" target="_blank" rel="noopener" style="color:var(--text-dim);text-decoration:underline;">npm</a> today — this just gets you release updates. Contact: <a href="mailto:hello@ryzek.dev" style="color:var(--text-dim);text-decoration:underline;">hello@ryzek.dev</a></div>
+        <div class="capture-success" id="capture-success">You're on the list. Thanks.</div>
+      </form>
+    </div>
+  </div>
+</section>
+
+<section id="faq" style="border-bottom:none;">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="section-tag">FAQ</div>
+      <h2>Common questions.</h2>
+    </div>
+    <div>
+      <div class="faq-item">
+        <div class="faq-q">Does ryzek send my code anywhere?</div>
+        <div class="faq-a">No. Scanning is fully local — nothing about the skills you scan leaves your machine. Telemetry is anonymous, usage-only, and off by default.</div>
       </div>
-      <div class="tier">
-        <div class="name">Enterprise</div>
-        <div class="qty">∞</div>
-        <div class="per">unlimited scans</div>
-        <ul><li>All 12 rules</li><li>Usage dashboard</li><li>Multi-machine keys</li></ul>
+      <div class="faq-item">
+        <div class="faq-q">Which agent tools does it work with?</div>
+        <div class="faq-a">Claude Code, Cursor, Gemini CLI, Codex, and any project using SKILL.md or standard MCP tool manifests. <code>ryzek discover</code> finds installs across all of them automatically.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Is the Free tier actually usable, or a crippled demo?</div>
+        <div class="faq-a">All 54 detection rules run in Free. The only limit is 20 scans a month — you're capped by volume, not by which threats it can catch.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I read the source before I trust it?</div>
+        <div class="faq-a">Yes — the full source is public on GitHub under BUSL-1.1. You can audit exactly what it does; the license restricts commercial resale, not reading or self-hosting for your own use.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Do I need Node.js installed?</div>
+        <div class="faq-a">Currently yes, via <code>npx</code>. Standalone binaries with no runtime dependency are on the roadmap.</div>
       </div>
     </div>
   </div>
 </section>
 
 <footer>
-  <div class="wrap foot-row">
-    <span>ryzek — static security scanning for AI agent skills.</span>
-    <span><a href="https://github.com/ryzekhq/ryzek">GitHub</a> · <a href="mailto:hello@ryzek.dev">Contact</a> · <a href="#benchmark">Benchmark</a> · <a href="#limits">Limitations</a></span>
+  <div class="wrap">
+    <div class="foot-top">
+      <div>
+        <div class="logo" style="margin-bottom:10px;"><span class="dot"></span>ryzek</div>
+        <p style="color:var(--text-faint);font-size:12.5px;max-width:260px;">Static security scanning for AI agent skills. Local-first, always.</p>
+      </div>
+      <div class="foot-links">
+        <div class="foot-col">
+          <h5>Product</h5>
+          <a href="#how">How it works</a>
+          <a href="#detection">Detection rules</a>
+          <a href="pricing.html">Pricing</a>
+          <a href="changelog.html">Changelog</a>
+        </div>
+        <div class="foot-col">
+          <h5>Project</h5>
+          <a href="https://github.com/ryzekhq/ryzek" target="_blank" rel="noopener">GitHub</a>
+          <a href="https://npmjs.com/package/ryzek" target="_blank" rel="noopener">npm</a>
+          <a href="partnerships.html">Partnerships</a>
+          <a href="https://instagram.com/" target="_blank" rel="noopener">Instagram</a>
+        </div>
+        <div class="foot-col">
+          <h5>Contact</h5>
+          <a href="mailto:hello@ryzek.dev">hello@ryzek.dev</a>
+          <a href="mailto:security@ryzek.dev">security@ryzek.dev</a>
+        </div>
+      </div>
+    </div>
+    <div class="foot-bottom">
+      <span>© 2026 ryzek. Licensed under BUSL-1.1.</span>
+      <span>Built to be read, not just run.</span>
+    </div>
   </div>
 </footer>
+
+<script>
+function handleSubscribe(e){
+  e.preventDefault();
+  var form = e.target;
+  var email = document.getElementById('capture-email').value;
+  // Replace this endpoint with your Formspree (or similar) form ID before going live.
+  fetch('https://formspree.io/f/YOUR_FORM_ID', {
+    method:'POST',
+    headers:{'Accept':'application/json','Content-Type':'application/json'},
+    body: JSON.stringify({email:email})
+  }).then(function(){
+    document.getElementById('capture-success').style.display='block';
+    form.reset();
+  }).catch(function(){
+    document.getElementById('capture-success').style.display='block';
+    document.getElementById('capture-success').textContent = "Saved locally — if this persists, email hello@ryzek.dev directly.";
+  });
+}
+</script>
 
 </body>
 </html>

@@ -1,0 +1,16 @@
+# Serves site/ as static assets on Cloudflare Workers.
+#
+# The site was previously a single HTML page pasted into a dashboard-uploaded
+# Worker, which is why ryzek.dev served "/" and 404'd everything else. Keeping
+# the config here means the live site deploys from the repo instead of from
+# whatever was last hand-uploaded.
+#
+# Deploy:  npx.cmd wrangler deploy
+name = "ryzek"
+compatibility_date = "2026-09-13"
+
+[assets]
+directory = "./site"
+# index.html is served at "/", and /rules.html style paths resolve directly.
+html_handling = "auto-trailing-slash"
+not_found_handling = "404-page"

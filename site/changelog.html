@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Changelog — ryzek</title>
+<meta name="description" content="Every ryzek release and what changed.">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+  :root{
+    --bg:#0a0d0b; --panel:#0d110e; --raised:#10140f; --line:#1e2a1e; --line-soft:#161c15;
+    --text:#e9ede7; --dim:#8fa08c; --faint:#5a6858;
+    --green:#7fe08c; --green-dim:#4a8f52; --amber:#e0b97f;
+    --serif:'Fraunces',Georgia,serif; --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:15px;line-height:1.65;
+    -webkit-font-smoothing:antialiased;}
+  a{color:inherit;text-decoration:none;}
+  a:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
+  .wrap{max-width:820px;margin:0 auto;padding:0 28px;}
+
+  nav{position:sticky;top:0;z-index:50;background:rgba(10,13,11,0.9);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line-soft);}
+  nav .wrap{max-width:1080px;display:flex;align-items:center;justify-content:space-between;height:64px;}
+  .logo{font-weight:700;font-size:16px;display:flex;align-items:center;gap:8px;}
+  .logo .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);}
+  .navlinks{display:flex;gap:26px;align-items:center;font-size:13.5px;}
+  .navlinks a{color:var(--dim);transition:color .15s;}
+  .navlinks a:hover,.navlinks a.active{color:var(--text);}
+  .navlinks a.active{border-bottom:1px solid var(--green);padding-bottom:2px;}
+  .nav-cta{border:1px solid var(--green-dim);color:var(--green)!important;padding:7px 14px;
+    border-radius:3px;font-size:13px;}
+  .nav-cta:hover{background:var(--green);color:var(--bg)!important;}
+  @media(max-width:820px){.navlinks a:not(.nav-cta){display:none;}}
+
+  header{padding:80px 0 56px;border-bottom:1px solid var(--line-soft);}
+  .eyebrow{color:var(--green);font-size:12px;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:18px;}
+  .eyebrow::before{content:'// ';color:var(--green-dim);}
+  h1{font-family:var(--serif);font-weight:500;font-size:clamp(32px,5vw,50px);line-height:1.08;
+    letter-spacing:-0.015em;margin-bottom:20px;}
+  h1 em{font-style:italic;color:var(--green);}
+  .lede{font-size:17px;color:var(--dim);max-width:620px;}
+
+  section{padding:64px 0;border-bottom:1px solid var(--line-soft);}
+  section:last-of-type{border-bottom:none;}
+  h2{font-family:var(--serif);font-weight:500;font-size:clamp(24px,3.5vw,32px);line-height:1.2;
+    margin-bottom:20px;letter-spacing:-0.01em;}
+  h3{font-family:var(--serif);font-weight:500;font-size:20px;margin:32px 0 12px;}
+  p{margin-bottom:18px;color:var(--dim);max-width:660px;}
+  p.emph{color:var(--text);}
+  p:last-child{margin-bottom:0;}
+  strong{color:var(--text);font-weight:600;}
+
+  .pull{border-left:2px solid var(--green-dim);padding:4px 0 4px 24px;margin:32px 0;}
+  .pull p{font-family:var(--serif);font-size:21px;line-height:1.45;color:var(--text);font-style:italic;}
+
+  .fill{background:rgba(224,185,127,0.07);border:1px dashed var(--amber);border-radius:6px;
+    padding:16px 20px;margin:20px 0;font-size:13px;color:var(--amber);}
+  .fill strong{color:var(--amber);}
+
+  .timeline{border-left:1px solid var(--line);padding-left:28px;margin-top:32px;}
+  .tl-item{position:relative;padding-bottom:34px;}
+  .tl-item::before{content:'';position:absolute;left:-33px;top:8px;width:9px;height:9px;
+    border-radius:50%;background:var(--bg);border:2px solid var(--green-dim);}
+  .tl-item:last-child{padding-bottom:0;}
+  .tl-item:last-child::before{background:var(--green);border-color:var(--green);
+    box-shadow:0 0 10px var(--green);}
+  .tl-when{font-size:11.5px;color:var(--faint);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:6px;}
+  .tl-what{font-family:var(--serif);font-size:18px;margin-bottom:6px;}
+  .tl-desc{font-size:13.5px;color:var(--dim);max-width:560px;}
+
+  .principles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:28px;}
+  @media(max-width:700px){.principles{grid-template-columns:1fr;}}
+  .principle{border:1px solid var(--line);border-radius:6px;padding:22px;background:var(--panel);}
+  .principle h4{font-size:14.5px;font-weight:600;margin-bottom:9px;color:var(--text);}
+  .principle p{font-size:13px;margin-bottom:0;}
+
+  .cta{border:1px solid var(--line);border-radius:8px;padding:40px;text-align:center;
+    background:var(--panel);margin-top:12px;}
+  .cta h3{margin-top:0;font-size:22px;}
+  .cta p{margin:0 auto 22px;font-size:14px;}
+  .btn{display:inline-flex;align-items:center;gap:8px;background:var(--green);color:#06110a;
+    font-weight:600;font-size:14px;padding:13px 22px;border-radius:3px;}
+  .btn:hover{background:#95ecA0;}
+
+  footer{padding:48px 0;border-top:1px solid var(--line-soft);}
+  .foot{display:flex;justify-content:space-between;gap:32px;flex-wrap:wrap;font-size:13px;color:var(--faint);}
+  .foot a{color:var(--dim);}
+  .foot a:hover{color:var(--green);}
+  .foot-col h5{font-size:11px;color:var(--faint);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
+  .foot-col a{display:block;padding:3px 0;}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="logo"><span class="dot"></span><a href="index.html">ryzek</a></div>
+    <div class="navlinks">
+      <a href="index.html">Product</a>
+      <a href="rules.html">How it works</a>
+      <a href="walkthroughs.html">Walkthroughs</a>
+      <a href="pricing.html">Pricing</a>
+      <a href="about.html">Why ryzek</a>
+      <a href="changelog.html" class="active">Changelog</a>
+      <a href="https://github.com/ryzekhq/ryzek" target="_blank" rel="noopener">GitHub</a>
+      <a class="nav-cta" href="index.html#get-started">Get ryzek</a>
+    </div>
+  </div>
+</nav>
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Changelog</div>
+    <h1>What changed, and <em>when.</em></h1>
+    <p class="lede">Every release, with the reasoning behind it. Detection rules are listed individually so you can see exactly what a version added.</p>
+  </div>
+</header>
+
+<section>
+  <div class="wrap">
+    <div class="timeline">
+
+      <div class="tl-item">
+        <div class="tl-when">v1.3.0 · unreleased</div>
+        <div class="tl-what">Twelve rules to fifty-four</div>
+        <div class="tl-desc">
+          <p style="margin-bottom:12px;">The largest release so far. Detection expands past skills into the MCP configuration layer, into the agent's own context, and across the whole toolset at once — 42 new rules, taking the set from 12 to 54.</p>
+          <p style="margin-bottom:12px;"><strong>MCP configuration scanning</strong> — seven new rules covering auto-approve settings, unpinned remote servers, credentials stored as literal values, known-vulnerable pinned versions, package impersonation, over-broad launch commands, and STDIO injection surface. MCP server definitions now load as tools, so a server entry goes through the same rules as a skill manifest instead of a separate code path.</p>
+          <p style="margin-bottom:12px;"><strong>MCP STDIO injection surface</strong> — in April 2026, OX Security disclosed that MCP's STDIO transport passes configuration values into subprocess execution without sanitisation, across every official SDK. Anthropic reviewed it and declined to change the protocol, stating sanitisation is the developer's responsibility. ryzek now checks whether your configuration sits on that pattern, and grades by whether an actual injection path is present rather than flagging every stdio server.</p>
+          <p style="margin-bottom:12px;"><strong>Known-CVE version matching</strong> — pinned versions are checked against a hand-verified advisory set. Patched versions produce no output at all.</p>
+          <p style="margin-bottom:12px;"><strong>Agent-safety rules</strong> — markdown image beacons, forged tool results, memory poisoning, deferred triggers, chain injection, confused-deputy patterns, system-prompt extraction and context-history access. These target the agent's reasoning rather than its filesystem, which is where the newer attacks live.</p>
+          <p style="margin-bottom:12px;"><strong>Rules that need the whole toolset</strong> — homoglyph and duplicate tool names, and toolset mutation, compare tools against each other rather than reading one in isolation. <code>shadow-mcp-discovery</code> finds MCP servers configured outside the project; it reads client configs in your home directory, so it is opt-in behind <code>--shadow</code> rather than running silently.</p>
+          <p style="margin-bottom:0;"><strong>Fewer false positives</strong> — the manifest loader treated any JSON file with a name as an agent tool, which meant <code>package.json</code> and <code>package-lock.json</code> were scanned as tools on every npm project. Package-manager and tooling files are now skipped.</p>
+        </div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-when">v1.2.1</div>
+        <div class="tl-what">Licence change and CLI fix</div>
+        <div class="tl-desc">Moved to BUSL-1.1: the source stays readable and auditable, while commercial resale and competing hosted services require a licence. Also fixed a crash in <code>--help</code>.</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-when">v1.2.0</div>
+        <div class="tl-what">Rename to ryzek</div>
+        <div class="tl-desc">Published under the current name, with the landing page and domain live.</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-when">v1.1.0</div>
+        <div class="tl-what">Multi-agent discovery</div>
+        <div class="tl-desc">Added <code>ryzek discover</code>, which walks the known install locations for Claude Code, Cursor, Gemini, and Codex and lists every skill it finds — including ones nobody remembers installing.</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-when">v1.0.0</div>
+        <div class="tl-what">First release</div>
+        <div class="tl-desc">Twelve detection rules across SKILL.md bundles and JSON tool manifests, each mapped to OWASP AST10, with a confidence score and stated reason on every finding.</div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="cta">
+      <h3>Get notified when rules change</h3>
+      <p>New detection coverage, nothing else.</p>
+      <a class="btn" href="index.html#get-started">Sign up for updates →</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <div>
+      <div class="logo" style="margin-bottom:10px;"><span class="dot"></span>ryzek</div>
+      <div style="max-width:240px;">Static security scanning for AI agent skills. Local-first, always.</div>
+    </div>
+    <div class="foot-col">
+      <h5>Product</h5>
+      <a href="index.html">Overview</a>
+      <a href="walkthroughs.html">Walkthroughs</a>
+      <a href="changelog.html">Changelog</a>
+    </div>
+    <div class="foot-col">
+      <h5>Project</h5>
+      <a href="https://github.com/ryzekhq/ryzek" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://npmjs.com/package/ryzek" target="_blank" rel="noopener">npm</a>
+      <a href="partnerships.html">Partnerships</a>
+    </div>
+    <div class="foot-col">
+      <h5>Contact</h5>
+      <a href="mailto:hello@ryzek.dev">hello@ryzek.dev</a>
+      <a href="mailto:security@ryzek.dev">security@ryzek.dev</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

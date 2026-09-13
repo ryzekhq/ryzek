@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pricing — ryzek</title>
+<meta name="description" content="Every rule in every tier, including the free one. Scanning runs offline. No seat cliff.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0d0b; --panel:#0d110e; --raised:#10140f;
+    --line:#1e2a1e; --line-soft:#161c15;
+    --text:#e9ede7; --dim:#8fa08c; --faint:#5a6858;
+    --green:#7fe08c; --green-dim:#4a8f52; --amber:#e0b97f; --red:#e0847f;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+    --serif:'Fraunces',Georgia,serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{background:var(--bg);color:var(--text);font-family:var(--mono);
+    font-size:14px;line-height:1.65;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:1120px;margin:0 auto;padding:0 24px;}
+  a{color:var(--green);}
+  nav{border-bottom:1px solid var(--line);padding:18px 0;position:sticky;top:0;
+    background:var(--bg);z-index:30;}
+  nav .wrap{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;}
+  .logo{font-weight:700;font-size:15px;display:flex;align-items:center;gap:8px;
+    text-decoration:none;color:var(--text);}
+  .logo .dot{width:7px;height:7px;border-radius:50%;background:var(--green);
+    box-shadow:0 0 8px var(--green);}
+  nav ul{display:flex;gap:22px;list-style:none;font-size:13px;flex-wrap:wrap;}
+  nav ul a{color:var(--dim);text-decoration:none;}
+  nav ul a:hover{color:var(--text);}
+  header{padding:64px 0 40px;text-align:center;}
+  header h1{font-family:var(--serif);font-weight:500;font-size:40px;
+    letter-spacing:-0.02em;line-height:1.1;margin-bottom:14px;}
+  header p{color:var(--dim);font-size:15px;max-width:52ch;margin:0 auto;}
+  .banner{border:1px solid var(--green-dim);background:rgba(127,224,140,.05);
+    border-radius:6px;padding:14px 20px;margin:30px auto 0;max-width:760px;
+    color:var(--text);font-size:13.5px;text-align:center;}
+  .banner b{color:var(--green);}
+  .toggle{display:flex;justify-content:center;align-items:center;gap:12px;
+    margin:34px 0 30px;font-size:13px;color:var(--dim);}
+  .switch{position:relative;width:50px;height:26px;background:var(--raised);
+    border:1px solid var(--line);border-radius:20px;cursor:pointer;}
+  .switch::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;
+    border-radius:50%;background:var(--green);transition:transform .18s;}
+  .switch.year::after{transform:translateX(24px);}
+  .save{color:var(--green);font-size:12px;}
+  .tiers{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));
+    gap:14px;padding-bottom:20px;align-items:stretch;}
+  .tier{border:1px solid var(--line);border-radius:7px;background:var(--panel);
+    padding:22px 20px 24px;display:flex;flex-direction:column;}
+  .tier.pick{border-color:var(--green-dim);background:var(--raised);}
+  .tier .flag{color:var(--green);font-size:11px;margin-bottom:8px;height:14px;}
+  .tier h2{font-size:15px;font-weight:700;margin-bottom:4px;}
+  .tier .who{color:var(--faint);font-size:12px;min-height:34px;line-height:1.4;}
+  .price{font-family:var(--serif);font-size:32px;font-weight:500;margin:14px 0 2px;
+    letter-spacing:-0.02em;}
+  .price small{font-family:var(--mono);font-size:12px;color:var(--faint);
+    font-weight:400;letter-spacing:0;}
+  .per{color:var(--faint);font-size:11.5px;min-height:16px;margin-bottom:16px;}
+  .why{border-top:1px solid var(--line-soft);border-bottom:1px solid var(--line-soft);
+    padding:11px 0;margin-bottom:15px;color:var(--dim);font-size:12.5px;line-height:1.5;}
+  .why b{color:var(--text);font-weight:500;}
+  .tier ul{list-style:none;font-size:12.5px;color:var(--dim);
+    display:flex;flex-direction:column;gap:7px;margin-bottom:20px;}
+  .tier li{display:flex;gap:8px;line-height:1.45;}
+  .tier li::before{content:'+';color:var(--green-dim);flex-shrink:0;}
+  .tier li.all::before{content:'\2713';color:var(--green);}
+  .tier .spacer{flex:1;}
+  .cta{display:block;text-align:center;text-decoration:none;font-weight:700;
+    font-size:13px;padding:11px;border-radius:5px;}
+  .cta.solid{background:var(--green);color:#06110a;}
+  .cta.ghost{border:1px solid var(--line);color:var(--text);}
+  .cta.ghost:hover{border-color:var(--green-dim);}
+  section{padding:56px 0;border-top:1px solid var(--line);}
+  h3{font-family:var(--serif);font-weight:500;font-size:26px;
+    letter-spacing:-0.01em;margin-bottom:10px;}
+  .sub{color:var(--dim);font-size:14px;max-width:62ch;margin-bottom:26px;}
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--line-soft);}
+  th{color:var(--faint);font-weight:500;font-size:12px;}
+  td.n{font-family:var(--mono);}
+  .good{color:var(--green);}
+  .bad{color:var(--red);}
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:34px;}
+  .cols h4{font-size:12px;font-weight:700;margin-bottom:12px;
+    padding-bottom:8px;border-bottom:1px solid var(--line);}
+  .cols h4.ok{color:var(--green);}
+  .cols h4.no{color:var(--amber);}
+  ul.plain{list-style:none;display:flex;flex-direction:column;gap:11px;
+    font-size:13px;color:var(--dim);line-height:1.55;}
+  ul.plain li{display:flex;gap:9px;}
+  ul.plain b{color:var(--text);font-weight:500;}
+  .cols .ok + ul.plain li::before{content:'\2713';color:var(--green-dim);flex-shrink:0;}
+  .cols .no + ul.plain li::before{content:'\2013';color:var(--amber);flex-shrink:0;opacity:.7;}
+  @media(max-width:640px){.cols{grid-template-columns:1fr;gap:26px;}}
+  .faq{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:26px;}
+  .faq h4{font-size:13.5px;font-weight:700;margin-bottom:6px;}
+  .faq p{color:var(--dim);font-size:13px;line-height:1.6;}
+  footer{border-top:1px solid var(--line);padding:30px 0 50px;
+    color:var(--faint);font-size:12px;display:flex;justify-content:space-between;
+    gap:16px;flex-wrap:wrap;}
+  footer a{color:var(--dim);text-decoration:none;}
+  a:focus-visible,.switch:focus-visible{outline:2px solid var(--green);outline-offset:2px;}
+  @media(max-width:640px){
+    header h1{font-size:30px;}
+    .tiers{grid-template-columns:1fr;}
+    header{padding:44px 0 30px;}
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <a class="logo" href="index.html"><span class="dot"></span>ryzek</a>
+    <ul>
+      <li><a href="rules.html">How it works</a></li>
+      <li><a href="walkthroughs.html">Walkthroughs</a></li>
+      <li><a href="changelog.html">Changelog</a></li>
+      <li><a href="about.html">About</a></li>
+      <li><a href="pricing.html">Pricing</a></li>
+    </ul>
+  </div>
+</nav>
+
+<header class="wrap">
+  <h1>Every rule, in every tier.</h1>
+  <p>Including the free one. We don't hide findings behind a paywall &mdash; a scan
+     that reports clean has to mean clean.</p>
+  <div class="banner">
+    <b>No seat cliff.</b> Seat pricing that steps up once you pass ten developers is
+    common in this category. Ours is $20 a seat at five seats and at five hundred.
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="toggle">
+    <span>Monthly</span>
+    <div class="switch" id="sw" role="switch" aria-checked="false" tabindex="0"
+         aria-label="Switch to yearly billing"></div>
+    <span>Yearly <span class="save">&mdash; 2 months free</span></span>
+  </div>
+
+  <div class="tiers">
+
+    <div class="tier">
+      <div class="flag"></div>
+      <h2>Free</h2>
+      <p class="who">One person, checking things by hand.</p>
+      <div class="price" data-m="$0" data-y="$0">$0</div>
+      <p class="per" data-m="forever" data-y="forever">forever</p>
+      <div class="why"><b>Start here.</b> The whole scanner, nothing withheld.</div>
+      <ul>
+        <li class="all">All 54 rules</li>
+        <li class="all">Runs fully offline</li>
+        <li>20 scans a month</li>
+        <li>JSON and SARIF output</li>
+        <li>Local HTML report</li>
+        <li>New rules 30 days after release</li>
+      </ul>
+      <div class="spacer"></div>
+      <a class="cta ghost" href="https://www.npmjs.com/package/ryzek">npx ryzek .</a>
+    </div>
+
+    <div class="tier pick">
+      <div class="flag">Most people start here</div>
+      <h2>Pro</h2>
+      <p class="who">You've stopped running it by hand.</p>
+      <div class="price" data-m="$16" data-y="$160">$16<small>/mo</small></div>
+      <p class="per" data-m="per month" data-y="per year &mdash; save $32">per month</p>
+      <div class="why"><b>Automate it.</b> Runs in CI, tells you when something changes.</div>
+      <ul>
+        <li class="all">Everything in Free</li>
+        <li>300 scans a month</li>
+        <li>CI integration, documented exit codes</li>
+        <li>Scheduled scans and drift detection</li>
+        <li>Slack and email alerts</li>
+        <li>New rules same day</li>
+        <li>Focus profiles and suppressions</li>
+      </ul>
+      <div class="spacer"></div>
+      <a class="cta solid" href="#" data-price="pro">Start Pro</a>
+    </div>
+
+    <div class="tier">
+      <div class="flag"></div>
+      <h2>Pro Plus</h2>
+      <p class="who">You need to show someone the trend.</p>
+      <div class="price" data-m="$29" data-y="$290">$29<small>/mo</small></div>
+      <p class="per" data-m="per month" data-y="per year &mdash; save $58">per month</p>
+      <div class="why"><b>See it over time.</b> One run tells you little. Ninety days tells you a lot.</div>
+      <ul>
+        <li class="all">Everything in Pro</li>
+        <li>1,000 scans a month</li>
+        <li>Web dashboard</li>
+        <li>Findings history and trends</li>
+        <li>Multi-project view</li>
+        <li>Write your own rules</li>
+        <li>API access</li>
+      </ul>
+      <div class="spacer"></div>
+      <a class="cta ghost" href="#" data-price="proplus">Start Pro Plus</a>
+    </div>
+
+    <div class="tier">
+      <div class="flag"></div>
+      <h2>Teams</h2>
+      <p class="who">More than one person, and suppressions need an owner.</p>
+      <div class="price" data-m="$20" data-y="$200">$20<small>/seat</small></div>
+      <p class="per" data-m="per seat, 3 seat minimum" data-y="per seat, per year &mdash; save $40">per seat, 3 seat minimum</p>
+      <div class="why"><b>Share it.</b> From $60/month. Same per-seat price at 3 seats and at 300.</div>
+      <ul>
+        <li class="all">Everything in Pro Plus</li>
+        <li>1,500 scans per seat, pooled</li>
+        <li>Single sign-on</li>
+        <li>Roles &mdash; who can dismiss a finding</li>
+        <li>Shared policy and suppressions</li>
+        <li>Reporting across every repo</li>
+        <li>Seat management</li>
+      </ul>
+      <div class="spacer"></div>
+      <a class="cta ghost" href="#" data-price="teams">Start Teams</a>
+    </div>
+
+    <div class="tier">
+      <div class="flag"></div>
+      <h2>Enterprise</h2>
+      <p class="who">Procurement needs paperwork, not features.</p>
+      <div class="price" data-m="Talk" data-y="Talk">Talk</div>
+      <p class="per" data-m="to us" data-y="to us">to us</p>
+      <div class="why"><b>Buy it properly.</b> A contract, an SLA, and someone who answers.</div>
+      <ul>
+        <li class="all">Everything in Teams</li>
+        <li>Air-gapped and private deployment</li>
+        <li>Self-hosted rule feed mirror</li>
+        <li>Security questionnaires completed</li>
+        <li>Named support contact and SLA</li>
+        <li>Custom rule development</li>
+      </ul>
+      <div class="spacer"></div>
+      <a class="cta ghost" href="mailto:hello@ryzek.dev?subject=Ryzek%20Enterprise%20enquiry">Email us</a>
+    </div>
+
+  </div>
+</div>
+
+<section class="wrap">
+  <h3>What a scan means</h3>
+  <p class="sub">One run of <code>ryzek</code> is one scan, no matter how many skills or
+     servers it covers. Point it at a repository with forty skills in it and that's
+     still one. We count commands, not files.</p>
+  <p class="sub">Run out on Free or Pro and you can buy a pack rather than upgrade.
+     Packs are deliberately worse value per scan than subscribing &mdash; if you're
+     buying them regularly, the next tier is cheaper and we'll say so.</p>
+  <table>
+    <tr><th>Scans a month</th><th>Free</th><th>Pro</th><th>Pro Plus</th><th>Teams</th><th>Enterprise</th></tr>
+    <tr><td>Included</td><td class="n">20</td><td class="n">300</td><td class="n">1,000</td>
+      <td class="n">1,500 &times; seats</td><td class="n">Unlimited</td></tr>
+    <tr><td>Minimum</td><td class="n">&mdash;</td><td class="n">&mdash;</td><td class="n">&mdash;</td>
+      <td class="n">3 seats &middot; $60/mo</td><td class="n">&mdash;</td></tr>
+    <tr><td>Buy more</td><td class="n" colspan="2">$5 / 25 &middot; $12 / 75 &middot; $30 / 250</td>
+      <td class="n">&mdash;</td><td class="n">&mdash;</td><td class="n">&mdash;</td></tr>
+    <tr><td>Detection rules</td><td class="good">All 54</td><td class="good">All 54</td>
+      <td class="good">All 54</td><td class="good">All 54</td><td class="good">All 54</td></tr>
+    <tr><td>New rules arrive</td><td>after 30 days</td><td>same day</td><td>same day</td>
+      <td>same day</td><td>same day</td></tr>
+    <tr><td>Scanning happens</td>
+      <td colspan="5" class="good">On your machine. Nothing is uploaded, on any tier.</td></tr>
+  </table>
+</section>
+
+<section class="wrap">
+  <h3>What Ryzek does, and what it doesn't</h3>
+  <p class="sub">Worth knowing before you pay for anything. The second list is real
+     gaps, not roadmap teasers.</p>
+
+  <div class="cols">
+    <div>
+      <h4 class="ok">Does</h4>
+      <ul class="plain">
+        <li>Scans entirely on your machine. Nothing is uploaded, on any tier.</li>
+        <li>54 rules across skills, MCP configuration and the agent layer.</li>
+        <li>8 rules aimed at attacks on the agent rather than on code.</li>
+        <li>A confidence score and a written reason on every finding.</li>
+        <li>Suppressions that persist, and drift detection against a baseline.</li>
+        <li>JSON and SARIF out, so it drops into what you already run.</li>
+      </ul>
+    </div>
+    <div>
+      <h4 class="no">Doesn't, yet</h4>
+      <ul class="plain">
+        <li><b>Runtime blocking.</b> Ryzek reads files. It doesn't sit between your
+            agent and its tools, so it can't stop something mid-call. If you need
+            that you want a gateway, and you may want both.</li>
+        <li><b>Live server inspection.</b> We read configuration, not the tool
+            descriptions a running server hands the agent.</li>
+        <li><b>SOC 2.</b> A real audit with a months-long window. We won't claim it
+            before we have it.</li>
+        <li><b>Dependency scanning.</b> We check MCP server versions against
+            advisories, not your whole tree.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="wrap">
+  <h3>Questions</h3>
+  <div class="faq">
+    <div><h4>Why give every rule away free?</h4>
+      <p>Because a scan that says clean has to mean clean. If we held a critical
+         finding back for paying customers, the free report would be a lie, and you'd
+         find out the worst possible way. We charge for automation, history and
+         support instead.</p></div>
+    <div><h4>What's the 30-day rule delay?</h4>
+      <p>New rules reach paid tiers the day they ship and the free tier a month later.
+         Nothing is ever hidden from you &mdash; the free scanner runs every rule it
+         has. It's just slightly behind on the newest ones.</p></div>
+    <div><h4>Does my code leave my machine?</h4>
+      <p>No, on every tier including Enterprise. Scanning is local. The only thing
+         that talks to us is the licence check and the rule feed, and both work
+         offline against a cache for up to seven days.</p></div>
+    <div><h4>What happens if I cancel?</h4>
+      <p>The scanner keeps working with the rules you already have. You stop getting
+         new ones. Nothing stops running and nothing gets deleted.</p></div>
+    <div><h4>Do you have SOC 2?</h4>
+      <p>Not yet. It's a real audit with a months-long observation window and we won't
+         claim it before we have it. If your procurement requires it today, we're not
+         the right fit yet &mdash; tell us anyway, it moves up our list.</p></div>
+    <div><h4>Is there an open-source rate?</h4>
+      <p>Maintainers of public repositories get Pro at no cost. Email us with a link
+         to the project.</p></div>
+  </div>
+</section>
+
+<footer class="wrap">
+  <span>ryzek &middot; static security scanning for AI agent skills and MCP servers</span>
+  <span><a href="mailto:hello@ryzek.dev">hello@ryzek.dev</a></span>
+</footer>
+
+<script>
+var sw = document.getElementById('sw');
+var yearly = false;
+function render(){
+  sw.classList.toggle('year', yearly);
+  sw.setAttribute('aria-checked', yearly ? 'true' : 'false');
+  document.querySelectorAll('.price').forEach(function(el){
+    var v = yearly ? el.dataset.y : el.dataset.m;
+    if(!v) return;
+    var unit = el.querySelector('small');
+    var suffix = unit ? unit.outerHTML : '';
+    if(unit && yearly) suffix = suffix.replace('/mo','/yr');
+    el.innerHTML = v + suffix;
+  });
+  document.querySelectorAll('.per').forEach(function(el){
+    var v = yearly ? el.dataset.y : el.dataset.m;
+    if(v) el.innerHTML = v;
+  });
+}
+sw.addEventListener('click', function(){ yearly = !yearly; render(); });
+sw.addEventListener('keydown', function(e){
+  if(e.key === ' ' || e.key === 'Enter'){ e.preventDefault(); yearly = !yearly; render(); }
+});
+
+// Fill these in from Stripe once the products exist.
+var PRICES = {
+  pro:     { monthly:'price_REPLACE_PRO_MONTHLY',     yearly:'price_REPLACE_PRO_YEARLY' },
+  proplus: { monthly:'price_REPLACE_PROPLUS_MONTHLY', yearly:'price_REPLACE_PROPLUS_YEARLY' },
+  teams:   { monthly:'price_REPLACE_TEAMS_MONTHLY',   yearly:'price_REPLACE_TEAMS_YEARLY' }
+};
+var CHECKOUT_ENDPOINT = '/api/checkout';
+
+document.querySelectorAll('[data-price]').forEach(function(btn){
+  btn.addEventListener('click', function(e){
+    e.preventDefault();
+    var tier = btn.dataset.price;
+    var priceId = PRICES[tier][yearly ? 'yearly' : 'monthly'];
+    if(!priceId || priceId.indexOf('price_REPLACE') === 0){
+      window.location.href = 'mailto:hello@ryzek.dev?subject=' +
+        encodeURIComponent('Ryzek ' + tier + ' - early access');
+      return;
+    }
+    fetch(CHECKOUT_ENDPOINT, {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ priceId: priceId })
+    }).then(function(r){ return r.json(); })
+      .then(function(d){ if(d && d.url) window.location.href = d.url; })
+      .catch(function(){
+        window.location.href = 'mailto:hello@ryzek.dev?subject=' +
+          encodeURIComponent('Ryzek ' + tier + ' - checkout issue');
+      });
+  });
+});
+render();
+</script>
+</body>
+</html>
